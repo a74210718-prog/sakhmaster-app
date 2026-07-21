@@ -108,7 +108,7 @@ export default function MasterDetailScreen({ route, navigation }: any) {
       <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
         <TouchableOpacity
           style={s.ctaBtn}
-          onPress={() => navigation.navigate('Home')}
+          onPress={() => navigation.navigate('CreateOrder')}
           activeOpacity={0.85}
         >
           <Text style={s.ctaText}>Создать заказ для мастера</Text>

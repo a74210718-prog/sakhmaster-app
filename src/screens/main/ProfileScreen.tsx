@@ -52,7 +52,7 @@ export default function ProfileScreen({ navigation }: any) {
       <View style={st.section}>
         <Text style={st.sectionTitle}>Кабинет</Text>
         <MenuItem icon="💰" label="Кошелёк" onPress={() => navigation.navigate('Wallet')} />
-        <MenuItem icon="📋" label="Мои заказы" onPress={() => navigation.navigate('Home')} />
+        <MenuItem icon="📋" label="Мои заказы" onPress={() => navigation.navigate('Tabs', { screen: 'Home' })} />
         {(user?.role === 'master_smz' || user?.role === 'ip_pro') && (
           <MenuItem icon="⭐" label="Мой профиль мастера" onPress={() => {}} />
         )}
