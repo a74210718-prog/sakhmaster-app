@@ -68,7 +68,7 @@ export default function ProfileScreen({ navigation }: any) {
         <MenuItem icon="🚪" label="Выйти из аккаунта" onPress={handleLogout} danger />
       </View>
 
-      <Text style={st.version}>Арбайтен v1.0 · sakhmaster.ru</Text>
+      <Text style={st.version}>Ладорея v1.0 · sakhmaster.ru</Text>
     </ScrollView>
   );
 }

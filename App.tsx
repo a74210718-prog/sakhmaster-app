@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View, Text } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useAuthStore } from './src/store/authStore';
 import { colors } from './src/theme/colors';
@@ -51,8 +52,6 @@ function MainTabs() {
           backgroundColor: colors.surface,
           borderTopColor:  colors.border,
           borderTopWidth:  1,
-          height:          70,
-          paddingBottom:   12,
         },
         tabBarActiveTintColor:   colors.emerald,
         tabBarInactiveTintColor: colors.textMuted,
@@ -133,9 +132,11 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer theme={NAV_THEME}>
-      <StatusBar style="light" />
-      {user ? <MainStack /> : <AuthStack />}
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer theme={NAV_THEME}>
+        <StatusBar style="light" />
+        {user ? <MainStack /> : <AuthStack />}
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }

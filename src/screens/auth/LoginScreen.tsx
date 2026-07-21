@@ -31,7 +31,7 @@ export default function LoginScreen({ navigation }: any) {
     >
       <View style={s.box}>
         {/* Логотип */}
-        <Text style={s.logo}>Арбайтен</Text>
+        <Text style={s.logo}>Ладорея</Text>
         <Text style={s.sub}>Маркетплейс услуг Сахалина</Text>
 
         <TextInput
@@ -41,7 +41,7 @@ export default function LoginScreen({ navigation }: any) {
           value={login}
           onChangeText={setLogin}
           autoCapitalize="none"
-          keyboardType="email-address"
+          keyboardType="default"
         />
         <TextInput
           style={s.input}
