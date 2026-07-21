@@ -3,18 +3,26 @@ import {
   View, Text, StyleSheet, ScrollView, ActivityIndicator,
   TouchableOpacity, Image,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { mastersApi, MasterDetail } from '../../api/masters';
+import { reviewsApi, Review } from '../../api/reviews';
 
 export default function MasterDetailScreen({ route, navigation }: any) {
   const { id } = route.params as { id: number };
-  const [master, setMaster] = useState<MasterDetail | null>(null);
+  const insets = useSafeAreaInsets();
+  const [master,  setMaster]  = useState<MasterDetail | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    mastersApi.show(id)
-      .then(({ data }) => setMaster(data.data))
-      .catch(() => navigation.goBack())
+    Promise.all([
+      mastersApi.show(id),
+      reviewsApi.forMaster(id),
+    ]).then(([mRes, rRes]) => {
+      setMaster(mRes.data.data);
+      setReviews(rRes.data.data ?? []);
+    }).catch(() => navigation.goBack())
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -31,8 +39,8 @@ export default function MasterDetailScreen({ route, navigation }: any) {
   const roleColor = master.role === 'ip_pro' ? colors.amber : colors.emerald;
 
   return (
-    <ScrollView style={s.root} contentContainerStyle={{ paddingBottom: 60 }}>
-      <View style={s.header}>
+    <ScrollView style={s.root} contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
+      <View style={[s.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.back}>
           <Text style={{ color: colors.emerald, fontSize: 28, lineHeight: 32 }}>‹</Text>
         </TouchableOpacity>
@@ -104,8 +112,29 @@ export default function MasterDetailScreen({ route, navigation }: any) {
         </View>
       ) : null}
 
+      {/* Отзывы */}
+      {reviews.length > 0 && (
+        <View style={{ marginTop: 12 }}>
+          <Text style={s.sectionTitle}>Отзывы ({reviews.length})</Text>
+          {reviews.slice(0, 5).map(r => (
+            <View key={r.id} style={s.reviewCard}>
+              <View style={s.reviewTop}>
+                <Text style={s.reviewAuthor}>{r.client.name}</Text>
+                <View style={{ flexDirection: 'row', gap: 2 }}>
+                  {[1,2,3,4,5].map(n => (
+                    <Text key={n} style={{ fontSize: 12, color: n <= r.rating ? colors.amber : colors.border }}>★</Text>
+                  ))}
+                </View>
+              </View>
+              {r.comment ? <Text style={s.reviewComment}>{r.comment}</Text> : null}
+              <Text style={s.reviewDate}>{new Date(r.created_at).toLocaleDateString('ru')}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
       {/* CTA */}
-      <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
+      <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
         <TouchableOpacity
           style={s.ctaBtn}
           onPress={() => navigation.navigate('CreateOrder')}
@@ -120,7 +149,13 @@ export default function MasterDetailScreen({ route, navigation }: any) {
 
 const s = StyleSheet.create({
   root:         { flex: 1, backgroundColor: colors.bg },
-  header:       { flexDirection: 'row', alignItems: 'center', padding: 16, paddingTop: 52, gap: 8 },
+  header:       { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 8 },
+  sectionTitle: { fontSize: 12, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, paddingHorizontal: 20, marginBottom: 8 },
+  reviewCard:   { marginHorizontal: 16, marginBottom: 8, backgroundColor: colors.surface, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: colors.border, gap: 4 },
+  reviewTop:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  reviewAuthor: { fontSize: 13, fontWeight: '700', color: colors.textPrimary },
+  reviewComment:{ fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+  reviewDate:   { fontSize: 11, color: colors.textMuted },
   back:         { width: 40, alignItems: 'center' },
   headerTitle:  { flex: 1, fontSize: 17, fontWeight: '700', color: colors.textPrimary },
   hero:         { alignItems: 'center', paddingVertical: 24, gap: 8 },

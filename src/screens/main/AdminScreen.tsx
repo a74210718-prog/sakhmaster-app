@@ -69,8 +69,8 @@ export default function AdminScreen({ navigation }: any) {
       setStats(sRes.data);
       setOrders(oRes.data.data ?? []);
       setPayouts(pRes.data.data ?? []);
-    } catch {
-      // API может не иметь этих endpoint — показываем заглушку
+    } catch (e: any) {
+      // 403 = нет прав, иначе API ещё не поднят
     }
     setLoading(false);
     setRefreshing(false);
