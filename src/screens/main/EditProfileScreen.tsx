@@ -118,7 +118,7 @@ const s = StyleSheet.create({
   label:         { fontSize: 12, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, marginTop: 12 },
   input:         { backgroundColor: colors.surface2, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontSize: 15, borderWidth: 1, borderColor: colors.border },
   readonlyField: { backgroundColor: colors.surface2, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, borderWidth: 1, borderColor: colors.border },
-  readonlyText:  { color: colors.textMuted, fontSize: 15 },
+  readonlyText:  { color: colors.textMuted, fontSize: 15, flexShrink: 1 },
   hint:          { fontSize: 11, color: colors.textMuted, marginTop: 4 },
   btn:           { marginTop: 20, backgroundColor: colors.emerald, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   btnText:       { color: '#fff', fontWeight: '800', fontSize: 15 },

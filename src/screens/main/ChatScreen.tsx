@@ -56,7 +56,7 @@ export default function ChatScreen({ route, navigation }: any) {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
       {/* Хедер */}
-      <View style={s.header}>
+      <View style={[s.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.back}>
           <Text style={{ color: colors.emerald, fontSize: 28, lineHeight: 32 }}>‹</Text>
         </TouchableOpacity>
@@ -126,7 +126,7 @@ export default function ChatScreen({ route, navigation }: any) {
 
 const s = StyleSheet.create({
   root:           { flex: 1, backgroundColor: colors.bg },
-  header:         { flexDirection: 'row', alignItems: 'center', padding: 16, paddingTop: 52, gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border },
+  header:         { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border },
   back:           { width: 40, alignItems: 'center' },
   headerTitle:    { fontSize: 17, fontWeight: '700', color: colors.textPrimary },
   headerSub:      { fontSize: 12, color: colors.textMuted },

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { useAuthStore } from '../../store/authStore';
 
@@ -24,6 +25,7 @@ function MenuItem({ icon, label, onPress, danger }: any) {
 
 export default function ProfileScreen({ navigation }: any) {
   const { user, logout } = useAuthStore();
+  const insets = useSafeAreaInsets();
   const roleInfo = ROLE_LABELS[user?.role ?? 'client'] ?? ROLE_LABELS.client;
 
   const handleLogout = () => {
@@ -36,12 +38,12 @@ export default function ProfileScreen({ navigation }: any) {
   return (
     <ScrollView style={st.root} contentContainerStyle={{ paddingBottom: 40 }}>
       {/* Аватар и имя */}
-      <View style={st.hero}>
+      <View style={[st.hero, { paddingTop: insets.top + 24 }]}>
         <View style={st.avatar}>
           <Text style={st.avatarLetter}>{user?.name?.[0]?.toUpperCase() ?? '?'}</Text>
         </View>
-        <Text style={st.name}>{user?.name}</Text>
-        <Text style={st.email}>{user?.email}</Text>
+        <Text style={st.name} numberOfLines={1}>{user?.name}</Text>
+        <Text style={st.email} numberOfLines={1} ellipsizeMode="tail">{user?.email}</Text>
         <View style={[st.roleBadge, { borderColor: roleInfo.color + '50', backgroundColor: roleInfo.color + '15' }]}>
           <Text style={{ fontSize: 14 }}>{roleInfo.icon}</Text>
           <Text style={[st.roleLabel, { color: roleInfo.color }]}>{roleInfo.label}</Text>
@@ -78,11 +80,11 @@ export default function ProfileScreen({ navigation }: any) {
 
 const st = StyleSheet.create({
   root:         { flex: 1, backgroundColor: colors.bg },
-  hero:         { alignItems: 'center', paddingTop: 60, paddingBottom: 28, gap: 8 },
+  hero:         { alignItems: 'center', paddingBottom: 28, gap: 8 },
   avatar:       { width: 80, height: 80, borderRadius: 24, backgroundColor: colors.emeraldDim, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.emerald + '60' },
   avatarLetter: { fontSize: 36, fontWeight: '700', color: colors.emerald },
-  name:         { fontSize: 22, fontWeight: '700', color: colors.textPrimary },
-  email:        { fontSize: 13, color: colors.textMuted },
+  name:         { fontSize: 22, fontWeight: '700', color: colors.textPrimary, maxWidth: '85%', textAlign: 'center' },
+  email:        { fontSize: 13, color: colors.textMuted, maxWidth: '85%', textAlign: 'center' },
   roleBadge:    { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, marginTop: 4 },
   roleLabel:    { fontWeight: '600', fontSize: 13 },
   section:      { marginHorizontal: 16, marginTop: 16, backgroundColor: colors.surface, borderRadius: 16, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
