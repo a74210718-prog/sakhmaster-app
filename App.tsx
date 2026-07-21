@@ -21,6 +21,8 @@ import WalletScreen        from './src/screens/main/WalletScreen';
 import ChatScreen          from './src/screens/main/ChatScreen';
 import CreateOrderScreen   from './src/screens/main/CreateOrderScreen';
 import AdminScreen         from './src/screens/main/AdminScreen';
+import ReviewScreen        from './src/screens/main/ReviewScreen';
+import EditProfileScreen   from './src/screens/main/EditProfileScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
@@ -125,7 +127,9 @@ function MainStack() {
       <Stack.Screen name="MasterDetail" component={MasterDetailScreen} />
       <Stack.Screen name="Wallet"       component={WalletScreen} />
       <Stack.Screen name="Chat"         component={ChatScreen} />
-      <Stack.Screen name="CreateOrder"  component={CreateOrderScreen} />
+      <Stack.Screen name="CreateOrder"   component={CreateOrderScreen} />
+      <Stack.Screen name="Review"        component={ReviewScreen} />
+      <Stack.Screen name="EditProfile"   component={EditProfileScreen} />
     </Stack.Navigator>
   );
 }

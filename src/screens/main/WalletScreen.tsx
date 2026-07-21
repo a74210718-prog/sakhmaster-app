@@ -5,8 +5,11 @@ import {
   KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as WebBrowser from 'expo-web-browser';
 import { colors } from '../../theme/colors';
 import { walletApi, WalletInfo, WalletTransaction } from '../../api/wallet';
+import { profileApi } from '../../api/profile';
+import { useAuthStore } from '../../store/authStore';
 
 const TX_LABELS: Record<string, { label: string; color: string }> = {
   deposit:    { label: 'Пополнение',  color: colors.emerald },
@@ -43,6 +46,9 @@ function TxItem({ item }: { item: WalletTransaction }) {
 
 export default function WalletScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
+  const user = useAuthStore((s) => s.user);
+  const isMaster = user?.role === 'master_smz' || user?.role === 'ip_pro';
+
   const [info, setInfo]           = useState<WalletInfo | null>(null);
   const [txs, setTxs]             = useState<WalletTransaction[]>([]);
   const [loading, setLoading]     = useState(true);
@@ -50,6 +56,9 @@ export default function WalletScreen({ navigation }: any) {
   const [topupModal, setTopupModal] = useState(false);
   const [topupAmount, setTopupAmount] = useState('');
   const [topupLoading, setTopupLoading] = useState(false);
+  const [withdrawModal, setWithdrawModal] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -77,15 +86,39 @@ export default function WalletScreen({ navigation }: any) {
       const { data } = await walletApi.topupInit(amount);
       setTopupModal(false);
       setTopupAmount('');
-      Alert.alert(
-        'Пополнение',
-        `Переходим к оплате ${amount.toLocaleString('ru')} ₽`,
-        [{ text: 'OK' }]
-      );
+      if (data.payment_url) {
+        // Открываем Tinkoff в браузере
+        await WebBrowser.openBrowserAsync(data.payment_url);
+        // После закрытия браузера обновляем баланс
+        load();
+      }
     } catch {
       Alert.alert('Ошибка', 'Не удалось создать платёж. Попробуйте ещё раз.');
     }
     setTopupLoading(false);
+  };
+
+  const handleWithdraw = async () => {
+    const amount = parseInt(withdrawAmount, 10);
+    if (!amount || amount < 100) {
+      Alert.alert('Ошибка', 'Минимальная сумма вывода 100 ₽');
+      return;
+    }
+    if (info && amount > info.balance) {
+      Alert.alert('Ошибка', `На кошельке только ${info.balance.toLocaleString('ru')} ₽`);
+      return;
+    }
+    setWithdrawLoading(true);
+    try {
+      await profileApi.withdraw(amount);
+      setWithdrawModal(false);
+      setWithdrawAmount('');
+      Alert.alert('Заявка принята', `Выплата ${amount.toLocaleString('ru')} ₽ будет обработана в течение 1 рабочего дня`);
+      load();
+    } catch (e: any) {
+      Alert.alert('Ошибка', e.response?.data?.message ?? 'Не удалось создать заявку');
+    }
+    setWithdrawLoading(false);
   };
 
   return (
@@ -117,9 +150,16 @@ export default function WalletScreen({ navigation }: any) {
                 {info && info.balance_held > 0 && (
                   <Text style={s.balanceHeld}>Заморожено: {info.balance_held.toLocaleString('ru')} ₽</Text>
                 )}
-                <TouchableOpacity style={s.topupBtn} onPress={() => setTopupModal(true)}>
-                  <Text style={s.topupText}>+ Пополнить</Text>
-                </TouchableOpacity>
+                <View style={s.balanceBtns}>
+                  <TouchableOpacity style={s.topupBtn} onPress={() => setTopupModal(true)}>
+                    <Text style={s.topupText}>+ Пополнить</Text>
+                  </TouchableOpacity>
+                  {isMaster && (
+                    <TouchableOpacity style={s.withdrawBtn} onPress={() => setWithdrawModal(true)}>
+                      <Text style={s.withdrawText}>↑ Вывести</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
 
               {txs.length > 0 && (
@@ -137,6 +177,36 @@ export default function WalletScreen({ navigation }: any) {
           renderItem={({ item }) => <TxItem item={item} />}
         />
       )}
+
+      {/* Модалка вывода средств */}
+      <Modal visible={withdrawModal} animationType="slide" transparent>
+        <KeyboardAvoidingView style={s.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={[s.modalSheet, { paddingBottom: insets.bottom + 16 }]}>
+            <Text style={s.modalTitle}>Вывод средств</Text>
+            <Text style={s.modalSub}>Доступно: {(info?.balance ?? 0).toLocaleString('ru')} ₽</Text>
+            <TextInput
+              style={s.modalInput}
+              placeholder="Сумма в рублях"
+              placeholderTextColor={colors.textMuted}
+              keyboardType="number-pad"
+              value={withdrawAmount}
+              onChangeText={setWithdrawAmount}
+              autoFocus
+            />
+            <Text style={{ fontSize: 12, color: colors.textMuted, textAlign: 'center', lineHeight: 18 }}>
+              Выплата на карту, привязанную к аккаунту Т-Банка.{'\n'}Обработка: 1 рабочий день.
+            </Text>
+            <View style={s.modalActions}>
+              <TouchableOpacity style={s.modalCancel} onPress={() => { setWithdrawModal(false); setWithdrawAmount(''); }}>
+                <Text style={{ color: colors.textSecondary, fontWeight: '600' }}>Отмена</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[s.modalConfirm, { backgroundColor: colors.amber }]} onPress={handleWithdraw} disabled={withdrawLoading}>
+                {withdrawLoading ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontWeight: '700' }}>Вывести</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
 
       {/* Модалка пополнения */}
       <Modal visible={topupModal} animationType="slide" transparent>
@@ -183,8 +253,11 @@ const s = StyleSheet.create({
   balanceLabel:  { fontSize: 13, color: colors.textMuted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8 },
   balanceAmount: { fontSize: 40, fontWeight: '800', color: colors.textPrimary, fontVariant: ['tabular-nums'] },
   balanceHeld:   { fontSize: 13, color: colors.amber },
-  topupBtn:      { marginTop: 12, backgroundColor: colors.emerald, borderRadius: 12, paddingHorizontal: 28, paddingVertical: 12 },
-  topupText:     { color: '#fff', fontWeight: '700', fontSize: 16 },
+  balanceBtns:   { flexDirection: 'row', gap: 10, marginTop: 12 },
+  topupBtn:      { flex: 1, backgroundColor: colors.emerald, borderRadius: 12, paddingHorizontal: 20, paddingVertical: 12, alignItems: 'center' },
+  topupText:     { color: '#fff', fontWeight: '700', fontSize: 15 },
+  withdrawBtn:   { flex: 1, backgroundColor: colors.amber, borderRadius: 12, paddingHorizontal: 20, paddingVertical: 12, alignItems: 'center' },
+  withdrawText:  { color: '#fff', fontWeight: '700', fontSize: 15 },
   sectionTitle:  { fontSize: 12, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, paddingHorizontal: 20, marginBottom: 4 },
   txItem:        { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.border },
   txDot:         { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },

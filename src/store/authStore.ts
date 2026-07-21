@@ -9,6 +9,7 @@ interface AuthState {
   login:   (email: string, password: string) => Promise<void>;
   logout:  () => Promise<void>;
   restore: () => Promise<void>;
+  setUser: (user: User) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -27,6 +28,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     await SecureStore.deleteItemAsync('auth_token');
     set({ user: null, token: null });
   },
+
+  setUser: (user) => set({ user }),
 
   restore: async () => {
     try {

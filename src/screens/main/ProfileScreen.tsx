@@ -60,8 +60,8 @@ export default function ProfileScreen({ navigation }: any) {
 
       <View style={st.section}>
         <Text style={st.sectionTitle}>Настройки</Text>
-        <MenuItem icon="🔔" label="Уведомления" onPress={() => {}} />
-        <MenuItem icon="🔒" label="Безопасность" onPress={() => {}} />
+        <MenuItem icon="✏️" label="Редактировать профиль" onPress={() => navigation.navigate('EditProfile')} />
+        <MenuItem icon="🔔" label="Уведомления" onPress={() => navigation.navigate('Tabs', { screen: 'Notifications' })} />
       </View>
 
       <View style={st.section}>

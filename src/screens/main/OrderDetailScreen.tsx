@@ -3,9 +3,11 @@ import {
   View, Text, StyleSheet, ScrollView, ActivityIndicator,
   TouchableOpacity, Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { ordersApi, Order } from '../../api/orders';
 import { orderStatusApi } from '../../api/orderStatus';
+import { reviewsApi } from '../../api/reviews';
 import { useAuthStore } from '../../store/authStore';
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
@@ -36,16 +38,23 @@ function getActions(order: Order, isMaster: boolean): { label: string; status: s
 
 export default function OrderDetailScreen({ route, navigation }: any) {
   const { id } = route.params as { id: number };
+  const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
-  const [order, setOrder]     = useState<Order | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [order, setOrder]         = useState<Order | null>(null);
+  const [loading, setLoading]     = useState(true);
   const [actLoading, setActLoading] = useState(false);
+  const [hasReview, setHasReview] = useState(false);
 
-  const reload = () => {
-    ordersApi.show(id)
-      .then(({ data }) => setOrder(data.data))
-      .catch(() => navigation.goBack())
-      .finally(() => setLoading(false));
+  const reload = async () => {
+    try {
+      const { data } = await ordersApi.show(id);
+      setOrder(data.data);
+      if (user?.role === 'client' && data.data.status === 'completed') {
+        const rv = await reviewsApi.checkOrder(id);
+        setHasReview(rv.data.has_review);
+      }
+    } catch { navigation.goBack(); }
+    setLoading(false);
   };
 
   useEffect(() => { reload(); }, [id]);
@@ -84,9 +93,9 @@ export default function OrderDetailScreen({ route, navigation }: any) {
   const actions = getActions(order, isMaster);
 
   return (
-    <ScrollView style={s.root} contentContainerStyle={{ paddingBottom: 48 }}>
+    <ScrollView style={s.root} contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
       {/* Хедер */}
-      <View style={s.header}>
+      <View style={[s.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.back}>
           <Text style={{ color: colors.emerald, fontSize: 28, lineHeight: 32 }}>‹</Text>
         </TouchableOpacity>
@@ -173,13 +182,35 @@ export default function OrderDetailScreen({ route, navigation }: any) {
           ))}
         </View>
       )}
+
+      {/* Кнопка отзыва — клиент после completed */}
+      {user?.role === 'client' && order.status === 'completed' && order.contractor && (
+        <View style={{ paddingHorizontal: 16, marginTop: 10 }}>
+          {hasReview ? (
+            <View style={s.reviewDone}>
+              <Text style={{ color: colors.amber, fontSize: 18 }}>★★★★★</Text>
+              <Text style={{ color: colors.textMuted, fontSize: 13 }}>Отзыв уже оставлен</Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={[s.actionBtn, { backgroundColor: colors.amber }]}
+              onPress={() => navigation.navigate('Review', {
+                orderId: order.id,
+                masterName: order.contractor?.name ?? 'Мастер',
+              })}
+            >
+              <Text style={s.actionText}>⭐ Оставить отзыв</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
     </ScrollView>
   );
 }
 
 const s = StyleSheet.create({
   root:         { flex: 1, backgroundColor: colors.bg },
-  header:       { flexDirection: 'row', alignItems: 'center', padding: 16, paddingTop: 52, gap: 8 },
+  header:       { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 8 },
   back:         { width: 40, alignItems: 'center' },
   headerTitle:  { flex: 1, fontSize: 17, fontWeight: '700', color: colors.textPrimary },
   chatBtn:      { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
@@ -195,4 +226,5 @@ const s = StyleSheet.create({
   description:  { fontSize: 15, color: colors.textSecondary, lineHeight: 22 },
   actionBtn:    { borderRadius: 14, paddingVertical: 15, alignItems: 'center' },
   actionText:   { color: '#fff', fontWeight: '700', fontSize: 16 },
+  reviewDone:   { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: colors.border },
 });
