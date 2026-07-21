@@ -3,11 +3,13 @@ import {
   View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform, ActivityIndicator,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { chatApi, ChatMessage } from '../../api/chat';
 
 export default function ChatScreen({ route, navigation }: any) {
   const { orderId, orderTitle } = route.params as { orderId: number; orderTitle?: string };
+  const insets = useSafeAreaInsets();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading]   = useState(true);
@@ -96,7 +98,7 @@ export default function ChatScreen({ route, navigation }: any) {
       )}
 
       {/* Поле ввода */}
-      <View style={s.inputRow}>
+      <View style={[s.inputRow, { paddingBottom: insets.bottom + 8 }]}>
         <TextInput
           style={s.input}
           placeholder="Сообщение..."

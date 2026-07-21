@@ -19,6 +19,8 @@ import NotificationsScreen from './src/screens/main/NotificationsScreen';
 import OrderDetailScreen   from './src/screens/main/OrderDetailScreen';
 import WalletScreen        from './src/screens/main/WalletScreen';
 import ChatScreen          from './src/screens/main/ChatScreen';
+import CreateOrderScreen   from './src/screens/main/CreateOrderScreen';
+import AdminScreen         from './src/screens/main/AdminScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
@@ -43,6 +45,7 @@ function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
 function MainTabs() {
   const user = useAuthStore((s) => s.user);
   const isMaster = user?.role === 'master_smz' || user?.role === 'ip_pro';
+  const isAdmin  = user?.role === 'admin' || user?.role === 'moderator';
 
   return (
     <Tab.Navigator
@@ -82,6 +85,17 @@ function MainTabs() {
           tabBarIcon: ({ focused }) => <TabIcon emoji="🔔" focused={focused} />,
         }}
       />
+      {isAdmin && (
+        <Tab.Screen
+          name="Admin"
+          component={AdminScreen}
+          options={{
+            title: 'Админ',
+            tabBarIcon: ({ focused }) => <TabIcon emoji="⚡" focused={focused} />,
+            tabBarBadgeStyle: { backgroundColor: colors.rose },
+          }}
+        />
+      )}
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
@@ -111,6 +125,7 @@ function MainStack() {
       <Stack.Screen name="MasterDetail" component={MasterDetailScreen} />
       <Stack.Screen name="Wallet"       component={WalletScreen} />
       <Stack.Screen name="Chat"         component={ChatScreen} />
+      <Stack.Screen name="CreateOrder"  component={CreateOrderScreen} />
     </Stack.Navigator>
   );
 }

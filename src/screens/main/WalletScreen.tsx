@@ -4,6 +4,7 @@ import {
   ActivityIndicator, RefreshControl, TextInput, Alert, Modal,
   KeyboardAvoidingView, Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { walletApi, WalletInfo, WalletTransaction } from '../../api/wallet';
 
@@ -41,6 +42,7 @@ function TxItem({ item }: { item: WalletTransaction }) {
 }
 
 export default function WalletScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   const [info, setInfo]           = useState<WalletInfo | null>(null);
   const [txs, setTxs]             = useState<WalletTransaction[]>([]);
   const [loading, setLoading]     = useState(true);
@@ -142,7 +144,7 @@ export default function WalletScreen({ navigation }: any) {
           style={s.modalOverlay}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <View style={s.modalSheet}>
+          <View style={[s.modalSheet, { paddingBottom: insets.bottom + 16 }]}>
             <Text style={s.modalTitle}>Пополнение кошелька</Text>
             <Text style={s.modalSub}>Минимум 100 ₽</Text>
             <TextInput
