@@ -61,6 +61,10 @@ export default function LoginScreen({ navigation }: any) {
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>
           <Text style={s.link}>Нет аккаунта? <Text style={{ color: colors.emerald }}>Зарегистрироваться</Text></Text>
         </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => navigation.navigate('Welcome')} style={{ marginTop: 4 }}>
+          <Text style={[s.link, { color: colors.textMuted, fontSize: 13 }]}>← На главную</Text>
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );

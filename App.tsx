@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from './src/store/authStore';
 import { colors } from './src/theme/colors';
 
+import WelcomeScreen       from './src/screens/auth/WelcomeScreen';
 import LoginScreen         from './src/screens/auth/LoginScreen';
 import RegisterScreen      from './src/screens/auth/RegisterScreen';
 import HomeScreen          from './src/screens/main/HomeScreen';
@@ -126,6 +127,7 @@ function MainTabs() {
 function AuthStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Welcome"  component={WelcomeScreen} />
       <Stack.Screen name="Login"    component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
     </Stack.Navigator>
