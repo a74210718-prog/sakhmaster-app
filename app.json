@@ -3,6 +3,7 @@
     "name": "sakhmaster-app",
     "slug": "sakhmaster-app",
     "version": "1.0.0",
+    "scheme": "sakhmaster",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

@@ -4,10 +4,12 @@ import {
   TouchableOpacity, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as WebBrowser from 'expo-web-browser';
 import { colors } from '../../theme/colors';
 import { ordersApi, Order } from '../../api/orders';
 import { orderStatusApi } from '../../api/orderStatus';
 import { reviewsApi } from '../../api/reviews';
+import { paymentsApi, PAYMENT_STATUS } from '../../api/payments';
 import { useAuthStore } from '../../store/authStore';
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
@@ -40,10 +42,11 @@ export default function OrderDetailScreen({ route, navigation }: any) {
   const { id } = route.params as { id: number };
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
-  const [order, setOrder]         = useState<Order | null>(null);
-  const [loading, setLoading]     = useState(true);
+  const [order, setOrder]           = useState<Order | null>(null);
+  const [loading, setLoading]       = useState(true);
   const [actLoading, setActLoading] = useState(false);
-  const [hasReview, setHasReview] = useState(false);
+  const [payLoading, setPayLoading] = useState(false);
+  const [hasReview, setHasReview]   = useState(false);
 
   const reload = async () => {
     try {
@@ -76,6 +79,43 @@ export default function OrderDetailScreen({ route, navigation }: any) {
         },
       },
     ]);
+  };
+
+  const handlePayment = async () => {
+    if (!order) return;
+    setPayLoading(true);
+    try {
+      // Шаг 2-7: получаем PaymentURL с сервера
+      const { data } = await paymentsApi.getOrderPaymentUrl(order.id);
+      const { payment_url, payment_id } = data;
+
+      // Шаг 8: открываем в Chrome Custom Tabs / SFSafariViewController
+      const result = await WebBrowser.openAuthSessionAsync(payment_url, 'sakhmaster://');
+
+      if (result.type === 'success') {
+        const url = result.url ?? '';
+        if (url.includes('/success')) {
+          // Шаг 10-11: проверяем статус через API
+          const statusRes = await paymentsApi.checkStatus(payment_id);
+          const { status } = statusRes.data;
+
+          if (status === PAYMENT_STATUS.CONFIRMED || status === PAYMENT_STATUS.AUTHORIZED) {
+            Alert.alert('Оплата прошла!', 'Заказ оплачен. Мастер приступит к работе.');
+            reload();
+          } else {
+            Alert.alert('Оплата не подтверждена', `Статус: ${status}. Обратитесь в поддержку если деньги списались.`);
+          }
+        } else {
+          Alert.alert('Оплата не прошла', 'Попробуйте ещё раз или выберите другой способ оплаты.');
+        }
+      } else if (result.type === 'cancel') {
+        // Пользователь закрыл форму — не показываем ошибку
+      }
+    } catch (e: any) {
+      const msg = e.response?.data?.message ?? 'Не удалось инициировать оплату';
+      Alert.alert('Ошибка', msg);
+    }
+    setPayLoading(false);
   };
 
   if (loading) {
@@ -163,6 +203,24 @@ export default function OrderDetailScreen({ route, navigation }: any) {
         </View>
       ) : null}
 
+      {/* Кнопка оплаты — клиент, статус pending_agreement, есть сумма */}
+      {!isMaster && order.status === 'pending_agreement' && order.total_sum > 0 && (
+        <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
+          <TouchableOpacity
+            style={[s.actionBtn, s.payBtn]}
+            onPress={handlePayment}
+            disabled={payLoading}
+            activeOpacity={0.85}
+          >
+            {payLoading
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={[s.actionText, { color: '#1a1a1a' }]}>💳  Оплатить {order.total_sum.toLocaleString('ru')} ₽</Text>
+            }
+          </TouchableOpacity>
+          <Text style={s.payNote}>Оплата через T-Bank. Карта, СБП, T-Pay, Mir Pay.</Text>
+        </View>
+      )}
+
       {/* Кнопки действий */}
       {actions.length > 0 && (
         <View style={{ paddingHorizontal: 16, marginTop: 12, gap: 10 }}>
@@ -226,5 +284,7 @@ const s = StyleSheet.create({
   description:  { fontSize: 15, color: colors.textSecondary, lineHeight: 22 },
   actionBtn:    { borderRadius: 14, paddingVertical: 15, alignItems: 'center' },
   actionText:   { color: '#fff', fontWeight: '700', fontSize: 16 },
+  payBtn:       { backgroundColor: '#FFDD2D' },
+  payNote:      { fontSize: 11, color: colors.textMuted, textAlign: 'center', marginTop: 6 },
   reviewDone:   { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: colors.border },
 });
