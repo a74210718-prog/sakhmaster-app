@@ -13,7 +13,7 @@ export default function RegisterScreen({ navigation }: any) {
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm]   = useState('');
-  const [role, setRole]         = useState<'client'|'master_smz'>('client');
+  const [role, setRole]         = useState<'client'|'master_smz'|'ip_pro'>('client');
   const [loading, setLoading]   = useState(false);
   const setUser = useAuthStore.setState;
 
@@ -53,15 +53,18 @@ export default function RegisterScreen({ navigation }: any) {
 
         <Text style={s.label}>Я регистрируюсь как:</Text>
         <View style={s.roleRow}>
-          {(['client', 'master_smz'] as const).map((r) => (
+          {([
+            { key: 'client',     label: '👤 Клиент',      sub: 'Заказываю услуги' },
+            { key: 'master_smz', label: '🔧 Мастер СМЗ',  sub: 'Самозанятый' },
+            { key: 'ip_pro',     label: '🏗️ ИП / Компания', sub: 'Юрлицо или ИП' },
+          ] as const).map((r) => (
             <TouchableOpacity
-              key={r}
-              style={[s.roleBtn, role === r && s.roleBtnActive]}
-              onPress={() => setRole(r)}
+              key={r.key}
+              style={[s.roleBtn, role === r.key && s.roleBtnActive]}
+              onPress={() => setRole(r.key)}
             >
-              <Text style={[s.roleTxt, role === r && s.roleTxtActive]}>
-                {r === 'client' ? '👤 Клиент' : '🔧 Мастер'}
-              </Text>
+              <Text style={[s.roleTxt, role === r.key && s.roleTxtActive]}>{r.label}</Text>
+              <Text style={[s.roleSub, role === r.key && { color: colors.emerald + 'aa' }]}>{r.sub}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -87,11 +90,12 @@ const s = StyleSheet.create({
   root:          { padding: 24, gap: 12, paddingTop: 60 },
   title:         { fontSize: 26, fontWeight: '700', color: colors.textPrimary, marginBottom: 8 },
   label:         { color: colors.textSecondary, fontSize: 13 },
-  roleRow:       { flexDirection: 'row', gap: 10 },
-  roleBtn:       { flex:1, paddingVertical:12, borderRadius:12, borderWidth:1, borderColor: colors.border, backgroundColor: colors.surface, alignItems:'center' },
+  roleRow:       { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  roleBtn:       { flex:1, minWidth: '30%', paddingVertical:12, paddingHorizontal: 8, borderRadius:12, borderWidth:1, borderColor: colors.border, backgroundColor: colors.surface, alignItems:'center' },
   roleBtnActive: { borderColor: colors.emerald, backgroundColor: '#064e3b' },
-  roleTxt:       { color: colors.textSecondary, fontWeight: '600', fontSize: 14 },
+  roleTxt:       { color: colors.textSecondary, fontWeight: '600', fontSize: 13, textAlign: 'center' },
   roleTxtActive: { color: colors.emerald },
+  roleSub:       { color: colors.textMuted, fontSize: 11, marginTop: 2, textAlign: 'center' },
   input:         { backgroundColor: colors.surface, borderWidth:1, borderColor: colors.border, borderRadius:14, paddingHorizontal:16, paddingVertical:14, color: colors.textPrimary, fontSize:15 },
   btn:           { backgroundColor: colors.emerald, borderRadius:14, paddingVertical:15, alignItems:'center', marginTop:4 },
   btnText:       { color:'#fff', fontWeight:'700', fontSize:16 },

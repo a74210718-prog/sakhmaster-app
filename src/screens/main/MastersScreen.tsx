@@ -199,6 +199,7 @@ export default function MastersScreen({ navigation }: any) {
             <Text style={s.filterLabel}>Категория</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 8 }}>
               <TouchableOpacity
+                key="cat-all"
                 style={[s.chip, !draftF.category_id && s.chipActive]}
                 onPress={() => setDraftF(d => ({ ...d, category_id: undefined }))}
               >
@@ -219,6 +220,7 @@ export default function MastersScreen({ navigation }: any) {
             <Text style={s.filterLabel}>Город</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 8 }}>
               <TouchableOpacity
+                key="city-all"
                 style={[s.chip, !draftF.city_id && s.chipActive]}
                 onPress={() => setDraftF(d => ({ ...d, city_id: undefined }))}
               >

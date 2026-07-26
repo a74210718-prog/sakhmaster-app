@@ -1,7 +1,9 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-export const API_BASE = 'http://192.168.10.189:8000/api';
+export const API_BASE = __DEV__
+  ? 'http://192.168.10.189:8000/api'
+  : 'https://sakhmaster.ru/api';
 
 export const api = axios.create({
   baseURL: API_BASE,
