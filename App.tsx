@@ -7,6 +7,7 @@ import { ActivityIndicator, View, Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useAuthStore } from './src/store/authStore';
+import { useCartStore } from './src/store/cartStore';
 import { colors } from './src/theme/colors';
 
 import WelcomeScreen       from './src/screens/auth/WelcomeScreen';
@@ -29,6 +30,11 @@ import MasterStatsScreen       from './src/screens/main/MasterStatsScreen';
 import FleaScreen              from './src/screens/main/FleaScreen';
 import FleaItemScreen          from './src/screens/main/FleaItemScreen';
 import FleaCreateScreen        from './src/screens/main/FleaCreateScreen';
+import ShopScreen              from './src/screens/shop/ShopScreen';
+import ShopItemScreen          from './src/screens/shop/ShopItemScreen';
+import ShopCartScreen          from './src/screens/shop/ShopCartScreen';
+import ShopCheckoutScreen      from './src/screens/shop/ShopCheckoutScreen';
+import ShopOrdersScreen        from './src/screens/shop/ShopOrdersScreen';
 import LegalScreen             from './src/screens/main/LegalScreen';
 import AdminUsersScreen        from './src/screens/admin/AdminUsersScreen';
 import AdminOrdersScreen       from './src/screens/admin/AdminOrdersScreen';
@@ -91,6 +97,14 @@ function MainTabs() {
         options={{
           title: 'Мастера',
           tabBarIcon: ({ focused }) => <TabIcon emoji="🔧" focused={focused} />,
+        }}
+      />
+      <Tab.Screen
+        name="Shop"
+        component={ShopScreen}
+        options={{
+          title: 'Магазин',
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🛍️" focused={focused} />,
         }}
       />
       <Tab.Screen
@@ -166,6 +180,10 @@ function MainStack() {
       <Stack.Screen name="MasterStats"       component={MasterStatsScreen} />
       <Stack.Screen name="FleaItem"          component={FleaItemScreen} />
       <Stack.Screen name="FleaCreate"        component={FleaCreateScreen} />
+      <Stack.Screen name="ShopItem"          component={ShopItemScreen} />
+      <Stack.Screen name="ShopCart"          component={ShopCartScreen} />
+      <Stack.Screen name="ShopCheckout"      component={ShopCheckoutScreen} />
+      <Stack.Screen name="ShopOrders"        component={ShopOrdersScreen} />
       <Stack.Screen name="Legal"             component={LegalScreen} />
       <Stack.Screen name="AdminUsers"        component={AdminUsersScreen} />
       <Stack.Screen name="AdminOrders"       component={AdminOrdersScreen} />
@@ -180,8 +198,9 @@ function MainStack() {
 
 export default function App() {
   const { user, loading, restore } = useAuthStore();
+  const restoreCart = useCartStore((s) => s.restore);
 
-  useEffect(() => { restore(); }, []);
+  useEffect(() => { restore(); restoreCart(); }, []);
 
   if (loading) {
     return (
