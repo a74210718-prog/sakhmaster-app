@@ -28,6 +28,7 @@
     "android": {
       "package": "ru.sakhmaster.app",
       "versionCode": 1,
+      "minSdkVersion": 24,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_MEDIA_IMAGES",
