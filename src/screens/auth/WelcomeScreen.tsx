@@ -141,11 +141,20 @@ export default function WelcomeScreen() {
 
           <View style={s.featuresGrid}>
             {FEATURES.map((f) => (
-              <View key={f.title} style={s.featureCard}>
+              <TouchableOpacity
+                key={f.title}
+                style={s.featureCard}
+                onPress={() => f.title === 'Всё по закону'
+                  ? nav.navigate('Legal' as never)
+                  : nav.navigate('Register' as never)
+                }
+                activeOpacity={0.78}
+              >
                 <Text style={s.featureIcon}>{f.icon}</Text>
                 <Text style={s.featureTitle}>{f.title}</Text>
                 <Text style={s.featureDesc}>{f.desc}</Text>
-              </View>
+                <Text style={s.featureLink}>Подробнее →</Text>
+              </TouchableOpacity>
             ))}
           </View>
         </View>
@@ -405,6 +414,12 @@ const s = StyleSheet.create({
     fontSize: 13,
     color: colors.textSecondary,
     lineHeight: 19,
+  },
+  featureLink: {
+    fontSize: 12,
+    color: colors.emerald,
+    fontWeight: '600',
+    marginTop: 8,
   },
 
   // Категории

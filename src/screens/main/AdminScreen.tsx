@@ -104,7 +104,7 @@ export default function AdminScreen({ navigation }: any) {
               <TouchableOpacity
                 key={item.screen}
                 style={sc.quickBtn}
-                onPress={() => Alert.alert(item.label, 'Раздел в разработке')}
+                onPress={() => navigation.navigate(item.screen)}
               >
                 <Text style={{ fontSize: 24 }}>{item.icon}</Text>
                 <Text style={sc.quickLabel}>{item.label}</Text>

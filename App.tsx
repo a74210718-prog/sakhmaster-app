@@ -29,6 +29,11 @@ import MasterStatsScreen       from './src/screens/main/MasterStatsScreen';
 import FleaScreen              from './src/screens/main/FleaScreen';
 import FleaItemScreen          from './src/screens/main/FleaItemScreen';
 import FleaCreateScreen        from './src/screens/main/FleaCreateScreen';
+import LegalScreen             from './src/screens/main/LegalScreen';
+import AdminUsersScreen        from './src/screens/admin/AdminUsersScreen';
+import AdminOrdersScreen       from './src/screens/admin/AdminOrdersScreen';
+import AdminPayoutsScreen      from './src/screens/admin/AdminPayoutsScreen';
+import AdminSettingsScreen     from './src/screens/admin/AdminSettingsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
@@ -130,6 +135,7 @@ function AuthStack() {
       <Stack.Screen name="Welcome"  component={WelcomeScreen} />
       <Stack.Screen name="Login"    component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="Legal"    component={LegalScreen} />
     </Stack.Navigator>
   );
 }
@@ -149,6 +155,11 @@ function MainStack() {
       <Stack.Screen name="MasterStats"       component={MasterStatsScreen} />
       <Stack.Screen name="FleaItem"          component={FleaItemScreen} />
       <Stack.Screen name="FleaCreate"        component={FleaCreateScreen} />
+      <Stack.Screen name="Legal"             component={LegalScreen} />
+      <Stack.Screen name="AdminUsers"        component={AdminUsersScreen} />
+      <Stack.Screen name="AdminOrders"       component={AdminOrdersScreen} />
+      <Stack.Screen name="AdminPayouts"      component={AdminPayoutsScreen} />
+      <Stack.Screen name="AdminSettings"     component={AdminSettingsScreen} />
     </Stack.Navigator>
   );
 }
