@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   RefreshControl, ActivityIndicator, ScrollView, Alert, TextInput,
@@ -131,13 +132,31 @@ export default function HomeScreen({ navigation }: any) {
     setRefreshing(false);
   }, [page, activeFilter, categoryId, isAvailableFeed]);
 
+  const isMountedRef = useRef(false);
+
   useEffect(() => { loadCategories(); }, []);
+
+  // При первом монтировании — начальная загрузка
   useEffect(() => {
     setOrders([]);
     setPage(1);
     setLastPage(1);
     load(true);
   }, [activeFilter, categoryId, search]);
+
+  // При возврате на экран — тихое обновление (если фильтры не менялись)
+  useFocusEffect(
+    useCallback(() => {
+      if (isMountedRef.current) {
+        setOrders([]);
+        setPage(1);
+        setLastPage(1);
+        load(true);
+      } else {
+        isMountedRef.current = true;
+      }
+    }, [activeFilter, categoryId, search])
+  );
 
   useEffect(() => {
     if (!isMaster) {
@@ -195,6 +214,12 @@ export default function HomeScreen({ navigation }: any) {
       <Text style={s.cardMeta} numberOfLines={1}>
         {[item.category?.name, item.city?.name].filter(Boolean).join(' · ')}
       </Text>
+
+      {!isMaster && item.contractor && (
+        <Text style={s.cardContractor} numberOfLines={1}>
+          🔧 {item.contractor.name}
+        </Text>
+      )}
 
       <View style={s.cardBottom}>
         <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -371,7 +396,8 @@ const s = StyleSheet.create({
   cardTitle:       { flex: 1, fontSize: 15, fontWeight: '600', color: colors.textPrimary, lineHeight: 21 },
   urgentBadge:     { backgroundColor: colors.roseDim, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: colors.rose + '40' },
   cardDesc:        { fontSize: 13, color: colors.textSecondary, lineHeight: 18, marginBottom: 8 },
-  cardMeta:        { fontSize: 12, color: colors.textMuted, marginBottom: 10 },
+  cardMeta:        { fontSize: 12, color: colors.textMuted, marginBottom: 6 },
+  cardContractor:  { fontSize: 12, color: colors.emerald, fontWeight: '600', marginBottom: 8 },
   cardBottom:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardRight:       { flexDirection: 'row', alignItems: 'center', gap: 8 },
   price:           { fontSize: 15, fontWeight: '700', color: colors.emerald },
