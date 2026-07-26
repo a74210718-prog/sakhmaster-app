@@ -30,15 +30,30 @@ import MasterStatsScreen       from './src/screens/main/MasterStatsScreen';
 import FleaScreen              from './src/screens/main/FleaScreen';
 import FleaItemScreen          from './src/screens/main/FleaItemScreen';
 import FleaCreateScreen        from './src/screens/main/FleaCreateScreen';
+import FleaEditScreen          from './src/screens/main/FleaEditScreen';
+import MyFleaListingsScreen    from './src/screens/main/MyFleaListingsScreen';
+import FleaDealsScreen         from './src/screens/main/FleaDealsScreen';
+import IpDashboardScreen       from './src/screens/ip/IpDashboardScreen';
+import IpFinanceScreen         from './src/screens/ip/IpFinanceScreen';
+import IpProjectsScreen        from './src/screens/ip/IpProjectsScreen';
+import IpTeamScreen            from './src/screens/ip/IpTeamScreen';
 import RentScreen              from './src/screens/rent/RentScreen';
 import RentItemScreen          from './src/screens/rent/RentItemScreen';
 import RentBookingScreen       from './src/screens/rent/RentBookingScreen';
-import MyRentalsScreen         from './src/screens/rent/MyRentalsScreen';
+import MyRentalsScreen            from './src/screens/rent/MyRentalsScreen';
+import RentCabinetDashboardScreen from './src/screens/rent/RentCabinetDashboardScreen';
+import RentCabinetBookingsScreen  from './src/screens/rent/RentCabinetBookingsScreen';
+import RentCabinetToolsScreen     from './src/screens/rent/RentCabinetToolsScreen';
 import ShopScreen              from './src/screens/shop/ShopScreen';
 import ShopItemScreen          from './src/screens/shop/ShopItemScreen';
 import ShopCartScreen          from './src/screens/shop/ShopCartScreen';
 import ShopCheckoutScreen      from './src/screens/shop/ShopCheckoutScreen';
-import ShopOrdersScreen        from './src/screens/shop/ShopOrdersScreen';
+import ShopOrdersScreen              from './src/screens/shop/ShopOrdersScreen';
+import ShopCabinetDashboardScreen    from './src/screens/shop/ShopCabinetDashboardScreen';
+import ShopCabinetOrdersScreen       from './src/screens/shop/ShopCabinetOrdersScreen';
+import ShopCabinetProductsScreen     from './src/screens/shop/ShopCabinetProductsScreen';
+import ContractsScreen         from './src/screens/main/ContractsScreen';
+import ContractDetailScreen    from './src/screens/main/ContractDetailScreen';
 import LegalScreen             from './src/screens/main/LegalScreen';
 import AdminUsersScreen        from './src/screens/admin/AdminUsersScreen';
 import AdminOrdersScreen       from './src/screens/admin/AdminOrdersScreen';
@@ -192,6 +207,19 @@ function MainStack() {
       <Stack.Screen name="MasterStats"       component={MasterStatsScreen} />
       <Stack.Screen name="FleaItem"          component={FleaItemScreen} />
       <Stack.Screen name="FleaCreate"        component={FleaCreateScreen} />
+      <Stack.Screen name="FleaEdit"          component={FleaEditScreen} />
+      <Stack.Screen name="MyFleaListings"    component={MyFleaListingsScreen} />
+      <Stack.Screen name="FleaDeals"         component={FleaDealsScreen} />
+      <Stack.Screen name="RentCabinetDashboard"  component={RentCabinetDashboardScreen} />
+      <Stack.Screen name="RentCabinetBookings"  component={RentCabinetBookingsScreen} />
+      <Stack.Screen name="RentCabinetTools"     component={RentCabinetToolsScreen} />
+      <Stack.Screen name="ShopCabinetDashboard"  component={ShopCabinetDashboardScreen} />
+      <Stack.Screen name="ShopCabinetOrders"     component={ShopCabinetOrdersScreen} />
+      <Stack.Screen name="ShopCabinetProducts"   component={ShopCabinetProductsScreen} />
+      <Stack.Screen name="IpDashboard"           component={IpDashboardScreen} />
+      <Stack.Screen name="IpFinance"         component={IpFinanceScreen} />
+      <Stack.Screen name="IpProjects"        component={IpProjectsScreen} />
+      <Stack.Screen name="IpTeam"            component={IpTeamScreen} />
       <Stack.Screen name="RentItem"           component={RentItemScreen} />
       <Stack.Screen name="RentBooking"        component={RentBookingScreen} />
       <Stack.Screen name="MyRentals"          component={MyRentalsScreen} />
@@ -199,6 +227,8 @@ function MainStack() {
       <Stack.Screen name="ShopCart"          component={ShopCartScreen} />
       <Stack.Screen name="ShopCheckout"      component={ShopCheckoutScreen} />
       <Stack.Screen name="ShopOrders"        component={ShopOrdersScreen} />
+      <Stack.Screen name="Contracts"          component={ContractsScreen} />
+      <Stack.Screen name="ContractDetail"    component={ContractDetailScreen} />
       <Stack.Screen name="Legal"             component={LegalScreen} />
       <Stack.Screen name="AdminUsers"        component={AdminUsersScreen} />
       <Stack.Screen name="AdminOrders"       component={AdminOrdersScreen} />

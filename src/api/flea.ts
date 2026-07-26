@@ -66,5 +66,60 @@ export const fleaApi = {
 
   myItems: () => api.get<FleaListResponse>('/flea/items', { params: { my: 1 } }),
 
+  myListings: (page = 1) => api.get<FleaListResponse>('/flea/my-listings', { params: { page } }),
+
+  update: (id: number, data: {
+    title?:       string;
+    description?: string;
+    price?:       number;
+    condition?:   string;
+    category_id?: number;
+    city_id?:     number;
+    photos?:      { uri: string; type?: string; name?: string }[];
+  }) => {
+    const form = new FormData();
+    if (data.title)       form.append('title', data.title);
+    if (data.description !== undefined) form.append('description', data.description ?? '');
+    if (data.price !== undefined) form.append('price', String(data.price));
+    if (data.condition)   form.append('condition', data.condition);
+    if (data.category_id) form.append('category_id', String(data.category_id));
+    if (data.city_id)     form.append('city_id', String(data.city_id));
+    data.photos?.forEach((p, i) => {
+      form.append(`photos[${i}]`, { uri: p.uri, type: p.type ?? 'image/jpeg', name: p.name ?? `photo_${i}.jpg` } as any);
+    });
+    return api.patch<{ data: FleaItem }>(`/flea/items/${id}`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  close: (id: number) => api.patch(`/flea/items/${id}/close`, {}),
+
   delete: (id: number) => api.delete(`/flea/items/${id}`),
+
+  buyRequest: (id: number, buyer_message?: string) =>
+    api.post<{ data: FleaDeal }>(`/flea/items/${id}/buy`, { buyer_message }),
+
+  deals: (page = 1) => api.get<{ data: FleaDeal[]; meta: any }>('/flea/deals', { params: { page } }),
+
+  confirmDeal: (id: number) => api.patch<{ data: FleaDeal }>(`/flea/deals/${id}/confirm`, {}),
+
+  cancelDeal: (id: number, reason?: string) =>
+    api.patch<{ data: FleaDeal }>(`/flea/deals/${id}/cancel`, { reason }),
 };
+
+export interface FleaDeal {
+  id:                  number;
+  listing_id:          number;
+  listing_title:       string | null;
+  listing_photo:       string | null;
+  amount:              number;
+  buyer_message:       string | null;
+  status:              'pending' | 'paid' | 'completed' | 'cancelled' | 'disputed';
+  status_label:        string;
+  buyer_confirmed_at:  string | null;
+  seller_confirmed_at: string | null;
+  cancelled_at:        string | null;
+  cancel_reason:       string | null;
+  seller:              { id: number; name: string } | null;
+  created_at:          string;
+}

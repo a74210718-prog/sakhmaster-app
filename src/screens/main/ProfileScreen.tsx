@@ -57,6 +57,8 @@ export default function ProfileScreen({ navigation }: any) {
         <MenuItem icon="📋" label="Мои заказы" onPress={() => navigation.navigate('Tabs', { screen: 'Home' })} />
         <MenuItem icon="🛍️" label="Заказы в магазинах" onPress={() => navigation.navigate('ShopOrders')} />
         <MenuItem icon="🔩" label="Мои аренды"         onPress={() => navigation.navigate('MyRentals')} />
+        <MenuItem icon="🏷️" label="Мои объявления"    onPress={() => navigation.navigate('MyFleaListings')} />
+        <MenuItem icon="🛒" label="Мои покупки (барахолка)" onPress={() => navigation.navigate('FleaDeals')} />
         {(user?.role === 'master_smz' || user?.role === 'ip_pro') && (
           <>
             <MenuItem icon="🔧" label="Профиль мастера" onPress={() => navigation.navigate('MasterProfileEdit')} />
@@ -65,11 +67,23 @@ export default function ProfileScreen({ navigation }: any) {
             <MenuItem icon="⭐" label="Подписка PRO"     onPress={() => navigation.navigate('Subscription')} />
           </>
         )}
+        {user?.role === 'ip_pro' && (
+          <MenuItem icon="🏗️" label="Кабинет ИП" onPress={() => navigation.navigate('IpDashboard')} />
+        )}
+        {user?.role === 'shop_owner' && (
+          <MenuItem icon="🏪" label="Кабинет магазина" onPress={() => navigation.navigate('ShopCabinetDashboard')} />
+        )}
+        <MenuItem icon="🔩" label="Кабинет аренды (владелец)" onPress={() => navigation.navigate('RentCabinetDashboard')} />
       </View>
 
       <View style={st.section}>
         <Text style={st.sectionTitle}>Сервисы</Text>
         <MenuItem icon="🤖" label="ИИ-ассистент" onPress={() => navigation.navigate('AiChat')} />
+      </View>
+
+      <View style={st.section}>
+        <Text style={st.sectionTitle}>Документы</Text>
+        <MenuItem icon="📄" label="Мои договоры" onPress={() => navigation.navigate('Contracts')} />
       </View>
 
       <View style={st.section}>
