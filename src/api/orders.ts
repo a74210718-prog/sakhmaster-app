@@ -13,6 +13,7 @@ export interface Order {
   city?: { id: number; name: string } | null;
   customer?: { id: number; name: string } | null;
   contractor?: { id: number; name: string } | null;
+  photos?: string[];
 }
 
 export interface OrdersResponse {

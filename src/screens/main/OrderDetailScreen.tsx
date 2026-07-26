@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, ActivityIndicator,
-  TouchableOpacity, Alert,
+  TouchableOpacity, Alert, Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
@@ -202,6 +202,17 @@ export default function OrderDetailScreen({ route, navigation }: any) {
           <Text style={s.description}>{order.description}</Text>
         </View>
       ) : null}
+
+      {order.photos && order.photos.length > 0 && (
+        <View style={s.card}>
+          <Text style={s.sectionTitle}>Фото</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {order.photos.map((uri: string, i: number) => (
+              <Image key={i} source={{ uri }} style={{ width: 100, height: 100, borderRadius: 10 }} />
+            ))}
+          </View>
+        </View>
+      )}
 
       {/* Кнопка оплаты — клиент, статус pending_agreement, есть сумма */}
       {!isMaster && order.status === 'pending_agreement' && order.total_sum > 0 && (

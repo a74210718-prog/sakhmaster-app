@@ -2,16 +2,19 @@ import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput,
   TouchableOpacity, Switch, ActivityIndicator, Alert,
-  Modal, FlatList,
+  Modal, FlatList, Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { api } from '../../api/client';
-import { ordersApi } from '../../api/orders';
 
 interface Category { id: number; name: string }
 interface CityItem { id: number; name: string }
 interface RegionGroup { region: string; cities: CityItem[] }
+interface PhotoAsset { uri: string; name: string; type: string }
+
+const MAX_PHOTOS = 5;
 
 export default function CreateOrderScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
@@ -19,10 +22,12 @@ export default function CreateOrderScreen({ navigation }: any) {
   const [title, setTitle]           = useState('');
   const [description, setDesc]      = useState('');
   const [budget, setBudget]         = useState('');
+  const [deadline, setDeadline]     = useState('');
   const [isUrgent, setIsUrgent]     = useState(false);
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [cityId, setCityId]         = useState<number | null>(null);
   const [cityName, setCityName]     = useState('');
+  const [photos, setPhotos]         = useState<PhotoAsset[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [regions, setRegions]       = useState<RegionGroup[]>([]);
   const [loading, setLoading]       = useState(false);
@@ -42,7 +47,6 @@ export default function CreateOrderScreen({ navigation }: any) {
       .catch(() => {});
   }, []);
 
-  // Отфильтрованные регионы по поиску
   const filteredRegions = citySearch.trim()
     ? regions.map(rg => ({
         ...rg,
@@ -58,21 +62,49 @@ export default function CreateOrderScreen({ navigation }: any) {
     setExpandedRegion(null);
   };
 
+  const pickPhotos = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 0.8,
+      selectionLimit: MAX_PHOTOS - photos.length,
+    });
+    if (!result.canceled) {
+      const newPhotos = result.assets.map((a, i) => ({
+        uri: a.uri,
+        name: `photo_${Date.now()}_${i}.jpg`,
+        type: 'image/jpeg',
+      }));
+      setPhotos(prev => [...prev, ...newPhotos].slice(0, MAX_PHOTOS));
+    }
+  };
+
+  const removePhoto = (idx: number) => {
+    setPhotos(prev => prev.filter((_, i) => i !== idx));
+  };
+
   const submit = async () => {
     if (!title.trim()) { Alert.alert('Ошибка', 'Введите название заказа'); return; }
     if (!categoryId)   { Alert.alert('Ошибка', 'Выберите категорию'); return; }
     if (!cityId)       { Alert.alert('Ошибка', 'Выберите город'); return; }
+
     setLoading(true);
     try {
-      await ordersApi.create({
-        title:       title.trim(),
-        description: description.trim() || undefined,
-        total_sum:   budget ? parseInt(budget, 10) : 0,
-        is_urgent:   isUrgent,
-        category_id: categoryId,
-        city_id:     cityId,
+      const formData = new FormData();
+      formData.append('title', title.trim());
+      if (description.trim()) formData.append('description', description.trim());
+      if (budget) formData.append('total_sum', budget);
+      formData.append('category_id', String(categoryId));
+      formData.append('city_id', String(cityId));
+      formData.append('is_urgent', isUrgent ? '1' : '0');
+      if (deadline.trim()) formData.append('deadline_at', deadline.trim());
+      photos.forEach((p, i) => formData.append(`photos[${i}]`, p as any));
+
+      await api.post('/orders', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-      Alert.alert('Готово', 'Заказ размещён!', [
+
+      Alert.alert('Готово', 'Заказ размещён! Мастера получат уведомление.', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (e: any) {
@@ -88,7 +120,6 @@ export default function CreateOrderScreen({ navigation }: any) {
         contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 32 }}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Хедер */}
         <View style={[s.header, { paddingTop: insets.top + 8 }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={s.back}>
             <Text style={{ color: colors.emerald, fontSize: 28, lineHeight: 32 }}>‹</Text>
@@ -96,7 +127,6 @@ export default function CreateOrderScreen({ navigation }: any) {
           <Text style={s.headerTitle}>Новый заказ</Text>
         </View>
 
-        {/* Название */}
         <Text style={s.label}>Название *</Text>
         <TextInput
           style={s.input}
@@ -107,7 +137,6 @@ export default function CreateOrderScreen({ navigation }: any) {
           maxLength={120}
         />
 
-        {/* Описание */}
         <Text style={s.label}>Описание</Text>
         <TextInput
           style={[s.input, s.textarea]}
@@ -117,11 +146,29 @@ export default function CreateOrderScreen({ navigation }: any) {
           onChangeText={setDesc}
           multiline
           numberOfLines={4}
-          maxLength={1000}
+          maxLength={2000}
           textAlignVertical="top"
         />
 
-        {/* Бюджет */}
+        {/* Фото */}
+        <Text style={s.label}>Фото ({photos.length}/{MAX_PHOTOS})</Text>
+        <View style={s.photoRow}>
+          {photos.map((p, i) => (
+            <View key={i} style={s.photoWrap}>
+              <Image source={{ uri: p.uri }} style={s.photoThumb} />
+              <TouchableOpacity style={s.photoRemove} onPress={() => removePhoto(i)}>
+                <Text style={s.photoRemoveText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+          {photos.length < MAX_PHOTOS && (
+            <TouchableOpacity style={s.photoAdd} onPress={pickPhotos}>
+              <Text style={s.photoAddIcon}>📷</Text>
+              <Text style={s.photoAddText}>Добавить</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         <Text style={s.label}>Бюджет (₽)</Text>
         <TextInput
           style={s.input}
@@ -132,7 +179,17 @@ export default function CreateOrderScreen({ navigation }: any) {
           keyboardType="number-pad"
         />
 
-        {/* Категория */}
+        <Text style={s.label}>Желаемый срок</Text>
+        <TextInput
+          style={s.input}
+          placeholder="дд.мм.гггг (необязательно)"
+          placeholderTextColor={colors.textMuted}
+          value={deadline}
+          onChangeText={setDeadline}
+          keyboardType="numeric"
+          maxLength={10}
+        />
+
         <Text style={s.label}>Категория *</Text>
         <View style={s.chips}>
           {categories.map((c) => (
@@ -148,7 +205,6 @@ export default function CreateOrderScreen({ navigation }: any) {
           ))}
         </View>
 
-        {/* Город */}
         <Text style={s.label}>Город *</Text>
         <TouchableOpacity style={s.cityPicker} onPress={() => setCityModal(true)}>
           <Text style={cityId ? s.cityPickerSelected : s.cityPickerPlaceholder}>
@@ -157,7 +213,6 @@ export default function CreateOrderScreen({ navigation }: any) {
           <Text style={{ color: colors.textMuted, fontSize: 18 }}>›</Text>
         </TouchableOpacity>
 
-        {/* Срочно */}
         <View style={s.urgentRow}>
           <View>
             <Text style={s.urgentLabel}>Срочный заказ</Text>
@@ -171,7 +226,6 @@ export default function CreateOrderScreen({ navigation }: any) {
           />
         </View>
 
-        {/* Кнопка */}
         <TouchableOpacity style={s.submitBtn} onPress={submit} disabled={loading}>
           {loading
             ? <ActivityIndicator color="#fff" />
@@ -180,7 +234,6 @@ export default function CreateOrderScreen({ navigation }: any) {
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Модалка выбора города */}
       <Modal visible={cityModal} animationType="slide" onRequestClose={() => setCityModal(false)}>
         <View style={[m.root, { paddingTop: insets.top }]}>
           <View style={m.header}>
@@ -189,8 +242,6 @@ export default function CreateOrderScreen({ navigation }: any) {
               <Text style={{ color: colors.emerald, fontSize: 16, fontWeight: '600' }}>Закрыть</Text>
             </TouchableOpacity>
           </View>
-
-          {/* Поиск */}
           <View style={m.searchWrap}>
             <TextInput
               style={m.searchInput}
@@ -201,7 +252,6 @@ export default function CreateOrderScreen({ navigation }: any) {
               autoCapitalize="words"
             />
           </View>
-
           <FlatList
             data={filteredRegions}
             keyExtractor={(item) => item.region}
@@ -216,9 +266,7 @@ export default function CreateOrderScreen({ navigation }: any) {
                   >
                     <Text style={m.regionName}>{rg.region}</Text>
                     <Text style={m.regionCount}>{rg.cities.length} гор.</Text>
-                    <Text style={{ color: colors.textMuted, fontSize: 18 }}>
-                      {expanded ? '∨' : '›'}
-                    </Text>
+                    <Text style={{ color: colors.textMuted, fontSize: 18 }}>{expanded ? '∨' : '›'}</Text>
                   </TouchableOpacity>
                   {expanded && rg.cities.map((city) => (
                     <TouchableOpacity
@@ -226,9 +274,7 @@ export default function CreateOrderScreen({ navigation }: any) {
                       style={[m.cityRow, cityId === city.id && m.cityRowActive]}
                       onPress={() => selectCity(city)}
                     >
-                      <Text style={[m.cityName, cityId === city.id && { color: colors.emerald }]}>
-                        {city.name}
-                      </Text>
+                      <Text style={[m.cityName, cityId === city.id && { color: colors.emerald }]}>{city.name}</Text>
                       {cityId === city.id && <Text style={{ color: colors.emerald }}>✓</Text>}
                     </TouchableOpacity>
                   ))}
@@ -250,6 +296,14 @@ const s = StyleSheet.create({
   label:           { fontSize: 12, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8, marginTop: 16 },
   input:           { backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, color: colors.textPrimary, fontSize: 15, borderWidth: 1, borderColor: colors.border },
   textarea:        { minHeight: 100 },
+  photoRow:        { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  photoWrap:       { position: 'relative' },
+  photoThumb:      { width: 80, height: 80, borderRadius: 10, backgroundColor: colors.surface2 },
+  photoRemove:     { position: 'absolute', top: -6, right: -6, backgroundColor: colors.rose, borderRadius: 10, width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  photoRemoveText: { color: '#fff', fontSize: 10, fontWeight: '800' },
+  photoAdd:        { width: 80, height: 80, borderRadius: 10, borderWidth: 1.5, borderColor: colors.border, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', gap: 4 },
+  photoAddIcon:    { fontSize: 22 },
+  photoAddText:    { fontSize: 11, color: colors.textMuted, fontWeight: '600' },
   chips:           { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip:            { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   chipActive:      { backgroundColor: colors.emeraldDim, borderColor: colors.emerald },
