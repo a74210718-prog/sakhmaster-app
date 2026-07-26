@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  RefreshControl, ActivityIndicator, ScrollView, Alert,
+  RefreshControl, ActivityIndicator, ScrollView, Alert, TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
@@ -62,6 +62,7 @@ export default function HomeScreen({ navigation }: any) {
   const [lastPage, setLastPage]           = useState(1);
   const [loadingMore, setLoadingMore]     = useState(false);
   const [pendingPayCount, setPendingPayCount] = useState(0);
+  const [search, setSearch]               = useState('');
 
   const isAvailableFeed = isMaster && (!activeFilter || activeFilter === 'new');
 
@@ -83,6 +84,7 @@ export default function HomeScreen({ navigation }: any) {
       const params: Record<string, any> = { page: p };
       if (activeFilter) params.status = activeFilter;
       if (isAvailableFeed && categoryId) params.category_id = categoryId;
+      if (isAvailableFeed && search.trim()) params.search = search.trim();
       const { data } = await ordersApi.list(params);
       const result = (data as OrdersResponse).data ?? [];
       const meta   = (data as OrdersResponse).meta;
@@ -101,7 +103,7 @@ export default function HomeScreen({ navigation }: any) {
     setPage(1);
     setLastPage(1);
     load(true);
-  }, [activeFilter, categoryId]);
+  }, [activeFilter, categoryId, search]);
 
   useEffect(() => {
     if (!isMaster) {
@@ -233,6 +235,21 @@ export default function HomeScreen({ navigation }: any) {
         ))}
       </ScrollView>
 
+      {/* Поиск по заголовку (только для доступной ленты мастера) */}
+      {isAvailableFeed && (
+        <View style={s.searchWrap}>
+          <TextInput
+            style={s.searchInput}
+            placeholder="Поиск по заголовку заказа..."
+            placeholderTextColor={colors.textMuted}
+            value={search}
+            onChangeText={setSearch}
+            returnKeyType="search"
+            clearButtonMode="while-editing"
+          />
+        </View>
+      )}
+
       {/* Фильтр по категории (только для доступной ленты мастера) */}
       {isAvailableFeed && categories.length > 0 && (
         <ScrollView
@@ -330,4 +347,6 @@ const s = StyleSheet.create({
   payBanner:       { marginHorizontal: 16, marginBottom: 8, backgroundColor: colors.amberDim, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: colors.amber + '50' },
   payBannerText:   { fontSize: 14, fontWeight: '700', color: colors.amber },
   payBannerArrow:  { fontSize: 20, color: colors.amber },
+  searchWrap:      { paddingHorizontal: 16, paddingBottom: 6 },
+  searchInput:     { backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, color: colors.textPrimary, fontSize: 14, borderWidth: 1, borderColor: colors.border },
 });
