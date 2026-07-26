@@ -11,28 +11,63 @@ export default function ChatScreen({ route, navigation }: any) {
   const { orderId, orderTitle } = route.params as { orderId: number; orderTitle?: string };
   const insets = useSafeAreaInsets();
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [text, setText]         = useState('');
-  const [sending, setSending]   = useState(false);
+  const [messages, setMessages]       = useState<ChatMessage[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [text, setText]               = useState('');
+  const [sending, setSending]         = useState(false);
+  const [olderPage, setOlderPage]     = useState(2);
+  const [olderLastPage, setOlderLastPage] = useState(1);
+  const [loadingOlder, setLoadingOlder]   = useState(false);
   const flatRef = useRef<FlatList>(null);
 
-  const load = useCallback(async () => {
+  // Первичная загрузка — самая свежая страница
+  const loadInitial = useCallback(async () => {
     try {
       const { data } = await chatApi.list(orderId, 1);
-      // Показываем в хронологическом порядке (новые снизу)
       setMessages([...data.data].reverse());
+      setOlderLastPage(data.meta?.last_page ?? 1);
     } catch {}
     setLoading(false);
   }, [orderId]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { loadInitial(); }, []);
 
-  // Полинг раз в 10 секунд
+  // Полинг — добавляем только новые сообщения (по ID)
+  const pollNew = useCallback(async () => {
+    try {
+      const { data } = await chatApi.list(orderId, 1);
+      const fresh = [...data.data].reverse();
+      setMessages(prev => {
+        if (!prev.length) return fresh;
+        const maxId = Math.max(...prev.map(m => m.id));
+        const newMsgs = fresh.filter(m => m.id > maxId);
+        return newMsgs.length ? [...prev, ...newMsgs] : prev;
+      });
+    } catch {}
+  }, [orderId]);
+
   useEffect(() => {
-    const timer = setInterval(load, 10_000);
+    const timer = setInterval(pollNew, 10_000);
     return () => clearInterval(timer);
-  }, [load]);
+  }, [pollNew]);
+
+  // Загрузка старых сообщений
+  const loadOlder = async () => {
+    if (loadingOlder || olderPage > olderLastPage) return;
+    setLoadingOlder(true);
+    try {
+      const { data } = await chatApi.list(orderId, olderPage);
+      const older = [...data.data].reverse();
+      setMessages(prev => {
+        const existingIds = new Set(prev.map(m => m.id));
+        const unique = older.filter(m => !existingIds.has(m.id));
+        return [...unique, ...prev];
+      });
+      setOlderPage(p => p + 1);
+      setOlderLastPage(data.meta?.last_page ?? 1);
+    } catch {}
+    setLoadingOlder(false);
+  };
 
   const send = async () => {
     const trimmed = text.trim();
@@ -41,13 +76,15 @@ export default function ChatScreen({ route, navigation }: any) {
     setText('');
     try {
       const { data } = await chatApi.send(orderId, trimmed);
-      setMessages((prev) => [...prev, data.data]);
+      setMessages(prev => [...prev, data.data]);
       setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 100);
     } catch {
       setText(trimmed);
     }
     setSending(false);
   };
+
+  const hasOlder = olderPage <= olderLastPage;
 
   return (
     <KeyboardAvoidingView
@@ -75,6 +112,20 @@ export default function ChatScreen({ route, navigation }: any) {
           keyExtractor={(m) => String(m.id)}
           contentContainerStyle={{ padding: 12, gap: 8, paddingBottom: 8 }}
           onContentSizeChange={() => flatRef.current?.scrollToEnd({ animated: false })}
+          ListHeaderComponent={
+            hasOlder ? (
+              <TouchableOpacity
+                style={s.loadOlderBtn}
+                onPress={loadOlder}
+                disabled={loadingOlder}
+              >
+                {loadingOlder
+                  ? <ActivityIndicator color={colors.emerald} size="small" />
+                  : <Text style={s.loadOlderText}>⬆ Загрузить более ранние</Text>
+                }
+              </TouchableOpacity>
+            ) : null
+          }
           ListEmptyComponent={
             <View style={s.empty}>
               <Text style={s.emptyText}>Сообщений пока нет</Text>
@@ -130,6 +181,8 @@ const s = StyleSheet.create({
   back:           { width: 40, alignItems: 'center' },
   headerTitle:    { fontSize: 17, fontWeight: '700', color: colors.textPrimary },
   headerSub:      { fontSize: 12, color: colors.textMuted },
+  loadOlderBtn:   { alignSelf: 'center', paddingVertical: 10, paddingHorizontal: 20, marginBottom: 8, backgroundColor: colors.surface, borderRadius: 20, borderWidth: 1, borderColor: colors.border },
+  loadOlderText:  { fontSize: 13, color: colors.emerald, fontWeight: '600' },
   bubble:         { maxWidth: '80%', borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
   bubbleMine:     { alignSelf: 'flex-end', backgroundColor: colors.emerald + 'CC' },
   bubbleOther:    { alignSelf: 'flex-start', backgroundColor: colors.surface },
