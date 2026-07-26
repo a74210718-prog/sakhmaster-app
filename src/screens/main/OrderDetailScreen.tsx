@@ -11,6 +11,7 @@ import { orderStatusApi } from '../../api/orderStatus';
 import { reviewsApi } from '../../api/reviews';
 import { paymentsApi, PAYMENT_STATUS } from '../../api/payments';
 import { useAuthStore } from '../../store/authStore';
+import { api } from '../../api/client';
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   new:               { label: 'Новый',        color: colors.sky },
@@ -47,6 +48,7 @@ export default function OrderDetailScreen({ route, navigation }: any) {
   const [actLoading, setActLoading] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
   const [hasReview, setHasReview]   = useState(false);
+  const [unreadChat, setUnreadChat] = useState(0);
 
   const reload = async () => {
     try {
@@ -61,6 +63,12 @@ export default function OrderDetailScreen({ route, navigation }: any) {
   };
 
   useEffect(() => { reload(); }, [id]);
+
+  useEffect(() => {
+    api.get<{ count: number }>(`/orders/${id}/unread-count`)
+      .then(r => setUnreadChat(r.data.count))
+      .catch(() => {});
+  }, [id]);
 
   const handleAction = (status: string, label: string) => {
     Alert.alert(label, 'Подтвердить действие?', [
@@ -143,9 +151,17 @@ export default function OrderDetailScreen({ route, navigation }: any) {
         {/* Кнопка чата */}
         <TouchableOpacity
           style={s.chatBtn}
-          onPress={() => navigation.navigate('Chat', { orderId: order.id, orderTitle: order.title })}
+          onPress={() => {
+            setUnreadChat(0);
+            navigation.navigate('Chat', { orderId: order.id, orderTitle: order.title });
+          }}
         >
           <Text style={{ fontSize: 20 }}>💬</Text>
+          {unreadChat > 0 && (
+            <View style={s.chatBadge}>
+              <Text style={s.chatBadgeText}>{unreadChat > 9 ? '9+' : unreadChat}</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -186,7 +202,13 @@ export default function OrderDetailScreen({ route, navigation }: any) {
         {order.contractor && (
           <View style={s.row}>
             <Text style={s.metaKey}>Исполнитель</Text>
-            <Text style={s.metaVal}>{order.contractor.name}</Text>
+            {!isMaster ? (
+              <TouchableOpacity onPress={() => navigation.navigate('MasterDetail', { id: order.contractor!.id })}>
+                <Text style={[s.metaVal, { color: colors.emerald }]}>{order.contractor.name} ›</Text>
+              </TouchableOpacity>
+            ) : (
+              <Text style={s.metaVal}>{order.contractor.name}</Text>
+            )}
           </View>
         )}
         {order.is_urgent && (
@@ -282,7 +304,9 @@ const s = StyleSheet.create({
   header:       { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 8 },
   back:         { width: 40, alignItems: 'center' },
   headerTitle:  { flex: 1, fontSize: 17, fontWeight: '700', color: colors.textPrimary },
-  chatBtn:      { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  chatBtn:      { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  chatBadge:    { position: 'absolute', top: -5, right: -5, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: colors.rose, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  chatBadgeText:{ color: '#fff', fontSize: 10, fontWeight: '800' },
   card:         { margin: 16, marginBottom: 0, backgroundColor: colors.surface, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.border, gap: 10 },
   statusBadge:  { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1 },
   statusText:   { fontSize: 13, fontWeight: '700' },

@@ -10,19 +10,21 @@ import { ordersApi, Order, OrdersResponse } from '../../api/orders';
 import { api } from '../../api/client';
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  new:             { label: 'Новый',       color: colors.sky },
-  in_work:         { label: 'В работе',    color: colors.emerald },
-  pending_review:  { label: 'На проверке', color: colors.amber },
-  completed:       { label: 'Завершён',    color: '#6b7280' },
-  canceled:        { label: 'Отменён',     color: colors.rose },
+  new:                { label: 'Новый',          color: colors.sky },
+  pending_agreement:  { label: 'Ждёт оплаты',    color: colors.amber },
+  in_work:            { label: 'В работе',        color: colors.emerald },
+  pending_review:     { label: 'На проверке',     color: colors.amber },
+  completed:          { label: 'Завершён',        color: '#6b7280' },
+  canceled:           { label: 'Отменён',         color: colors.rose },
 };
 
 const CLIENT_FILTERS = [
-  { key: '',               label: 'Все' },
-  { key: 'new',            label: 'Новые' },
-  { key: 'in_work',        label: 'В работе' },
-  { key: 'pending_review', label: 'На проверке' },
-  { key: 'completed',      label: 'Завершённые' },
+  { key: '',                  label: 'Все' },
+  { key: 'new',               label: 'Новые' },
+  { key: 'pending_agreement', label: '💳 Оплата' },
+  { key: 'in_work',           label: 'В работе' },
+  { key: 'pending_review',    label: 'На проверке' },
+  { key: 'completed',         label: 'Завершённые' },
 ];
 
 const MASTER_FILTERS = [
@@ -56,6 +58,10 @@ export default function HomeScreen({ navigation }: any) {
   const [loading, setLoading]             = useState(true);
   const [refreshing, setRefreshing]       = useState(false);
   const [takingId, setTakingId]           = useState<number | null>(null);
+  const [page, setPage]                   = useState(1);
+  const [lastPage, setLastPage]           = useState(1);
+  const [loadingMore, setLoadingMore]     = useState(false);
+  const [pendingPayCount, setPendingPayCount] = useState(0);
 
   const isAvailableFeed = isMaster && (!activeFilter || activeFilter === 'new');
 
@@ -66,21 +72,44 @@ export default function HomeScreen({ navigation }: any) {
     } catch {}
   };
 
-  const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
+  const load = useCallback(async (reset = false) => {
+    const p = reset ? 1 : page;
+    if (reset) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
     try {
-      const params: Record<string, any> = {};
+      const params: Record<string, any> = { page: p };
       if (activeFilter) params.status = activeFilter;
       if (isAvailableFeed && categoryId) params.category_id = categoryId;
       const { data } = await ordersApi.list(params);
-      setOrders((data as OrdersResponse).data ?? []);
+      const result = (data as OrdersResponse).data ?? [];
+      const meta   = (data as OrdersResponse).meta;
+      setOrders(reset ? result : (prev) => [...prev, ...result]);
+      setLastPage(meta?.last_page ?? 1);
+      setPage(p + 1);
     } catch {}
     setLoading(false);
+    setLoadingMore(false);
     setRefreshing(false);
-  }, [activeFilter, categoryId, isAvailableFeed]);
+  }, [page, activeFilter, categoryId, isAvailableFeed]);
 
   useEffect(() => { loadCategories(); }, []);
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    setOrders([]);
+    setPage(1);
+    setLastPage(1);
+    load(true);
+  }, [activeFilter, categoryId]);
+
+  useEffect(() => {
+    if (!isMaster) {
+      ordersApi.list({ status: 'pending_agreement', page: 1 })
+        .then(r => setPendingPayCount((r.data as OrdersResponse).meta?.total ?? 0))
+        .catch(() => {});
+    }
+  }, [isMaster]);
 
   const handleTakeOrder = async (order: Order) => {
     Alert.alert(
@@ -170,6 +199,20 @@ export default function HomeScreen({ navigation }: any) {
         )}
       </View>
 
+      {/* Баннер «ждут оплаты» — только клиентам */}
+      {!isMaster && pendingPayCount > 0 && activeFilter !== 'pending_agreement' && (
+        <TouchableOpacity
+          style={s.payBanner}
+          onPress={() => setActiveFilter('pending_agreement')}
+          activeOpacity={0.85}
+        >
+          <Text style={s.payBannerText}>
+            💳  {pendingPayCount} {pendingPayCount === 1 ? 'заказ ждёт' : 'заказа ждут'} оплаты
+          </Text>
+          <Text style={s.payBannerArrow}>›</Text>
+        </TouchableOpacity>
+      )}
+
       {/* Фильтры статуса */}
       <ScrollView
         horizontal
@@ -226,10 +269,13 @@ export default function HomeScreen({ navigation }: any) {
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
-              onRefresh={() => { setRefreshing(true); load(true); }}
+              onRefresh={() => { setRefreshing(true); setOrders([]); setPage(1); load(true); }}
               tintColor={colors.emerald}
             />
           }
+          onEndReached={() => { if (!loadingMore && page <= lastPage) load(false); }}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={loadingMore ? <ActivityIndicator color={colors.emerald} style={{ marginVertical: 20 }} /> : null}
           ListEmptyComponent={
             <View style={s.empty}>
               <Text style={s.emptyIcon}>{isAvailableFeed ? '🔍' : '📋'}</Text>
@@ -281,4 +327,7 @@ const s = StyleSheet.create({
   emptyIcon:       { fontSize: 48, marginBottom: 12 },
   emptyText:       { fontSize: 16, color: colors.textSecondary, fontWeight: '600' },
   emptySub:        { fontSize: 13, color: colors.textMuted, marginTop: 6, textAlign: 'center', paddingHorizontal: 24 },
+  payBanner:       { marginHorizontal: 16, marginBottom: 8, backgroundColor: colors.amberDim, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: colors.amber + '50' },
+  payBannerText:   { fontSize: 14, fontWeight: '700', color: colors.amber },
+  payBannerArrow:  { fontSize: 20, color: colors.amber },
 });
