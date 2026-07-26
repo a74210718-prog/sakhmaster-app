@@ -87,21 +87,23 @@ export default function WelcomeScreen() {
           </Text>
 
           {/* CTA кнопки */}
-          <TouchableOpacity
-            style={s.btnPrimary}
-            onPress={() => nav.navigate('Register')}
-            activeOpacity={0.85}
-          >
-            <Text style={s.btnPrimaryText}>Я — клиент, найти мастера</Text>
-          </TouchableOpacity>
+          <View style={{ gap: 10, marginBottom: 20 }}>
+            <TouchableOpacity
+              style={s.btnPrimary}
+              onPress={() => nav.navigate('Register')}
+              activeOpacity={0.85}
+            >
+              <Text style={s.btnPrimaryText}>Я — клиент, найти мастера</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={s.btnSecondary}
-            onPress={() => nav.navigate('Register')}
-            activeOpacity={0.85}
-          >
-            <Text style={s.btnSecondaryText}>Я — мастер, брать заказы</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={s.btnSecondary}
+              onPress={() => nav.navigate('Register')}
+              activeOpacity={0.85}
+            >
+              <Text style={s.btnSecondaryText}>Я — мастер, брать заказы</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Trust-метки */}
           <View style={s.trustRow}>
@@ -176,24 +178,30 @@ export default function WelcomeScreen() {
 
         {/* ── CTA ────────────────────────────────────── */}
         <View style={s.ctaBlock}>
-          <Text style={s.ctaTitle}>Начните прямо сейчас</Text>
+          <View style={s.ctaAccentLine} />
+          <Text style={s.ctaTitle}>
+            Начните{' '}
+            <Text style={s.ctaTitleAccent}>прямо сейчас</Text>
+          </Text>
           <Text style={s.ctaSub}>Регистрация бесплатная. Платите только за реальную услугу.</Text>
 
-          <TouchableOpacity
-            style={s.ctaBtnWhite}
-            onPress={() => nav.navigate('Register')}
-            activeOpacity={0.85}
-          >
-            <Text style={s.ctaBtnWhiteText}>Создать аккаунт</Text>
-          </TouchableOpacity>
+          <View style={{ gap: 10 }}>
+            <TouchableOpacity
+              style={s.btnPrimary}
+              onPress={() => nav.navigate('Register')}
+              activeOpacity={0.85}
+            >
+              <Text style={s.btnPrimaryText}>Создать аккаунт</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={s.ctaBtnOutline}
-            onPress={() => nav.navigate('Login')}
-            activeOpacity={0.85}
-          >
-            <Text style={s.ctaBtnOutlineText}>Войти в кабинет</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={s.btnSecondary}
+              onPress={() => nav.navigate('Login')}
+              activeOpacity={0.85}
+            >
+              <Text style={s.btnSecondaryText}>Войти в кабинет</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* ── Мини-футер ─────────────────────────────── */}
@@ -279,13 +287,12 @@ const s = StyleSheet.create({
     fontWeight: '700',
   },
   btnSecondary: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surface2,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
-    marginBottom: 20,
   },
   btnSecondaryText: {
     color: colors.textPrimary,
@@ -456,53 +463,34 @@ const s = StyleSheet.create({
 
   // CTA
   ctaBlock: {
-    backgroundColor: colors.emerald,
+    backgroundColor: colors.surface,
     paddingHorizontal: 20,
-    paddingVertical: 32,
-    alignItems: 'center',
+    paddingTop: 28,
+    paddingBottom: 32,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  ctaAccentLine: {
+    width: 40,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: colors.emerald,
+    marginBottom: 18,
   },
   ctaTitle: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#fff',
-    textAlign: 'center',
+    color: colors.textPrimary,
     marginBottom: 8,
+  },
+  ctaTitleAccent: {
+    color: colors.emerald,
   },
   ctaSub: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.85)',
-    textAlign: 'center',
+    color: colors.textSecondary,
     marginBottom: 24,
     lineHeight: 20,
-  },
-  ctaBtnWhite: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingVertical: 15,
-    paddingHorizontal: 32,
-    marginBottom: 10,
-    width: '100%',
-    alignItems: 'center',
-  },
-  ctaBtnWhiteText: {
-    color: '#059669',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  ctaBtnOutline: {
-    backgroundColor: 'transparent',
-    borderRadius: 12,
-    paddingVertical: 15,
-    paddingHorizontal: 32,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.6)',
-    width: '100%',
-    alignItems: 'center',
-  },
-  ctaBtnOutlineText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
   },
 
   // Футер
