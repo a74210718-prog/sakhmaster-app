@@ -96,6 +96,7 @@ export default function HomeScreen({ navigation }: any) {
   const [takingId, setTakingId]           = useState<number | null>(null);
   const [page, setPage]                   = useState(1);
   const [lastPage, setLastPage]           = useState(1);
+  const [total, setTotal]                 = useState(0);
   const [loadingMore, setLoadingMore]     = useState(false);
   const [pendingPayCount, setPendingPayCount] = useState(0);
   const [search, setSearch]               = useState('');
@@ -126,6 +127,7 @@ export default function HomeScreen({ navigation }: any) {
       const meta   = (data as OrdersResponse).meta;
       setOrders(reset ? result : (prev) => [...prev, ...result]);
       setLastPage(meta?.last_page ?? 1);
+      setTotal(meta?.total ?? 0);
       setPage(p + 1);
     } catch {}
     setLoading(false);
@@ -255,7 +257,9 @@ export default function HomeScreen({ navigation }: any) {
       <View style={[s.header, { paddingTop: insets.top + 12 }]}>
         <View style={{ flex: 1 }}>
           <Text style={s.greeting}>Привет, {user?.name?.split(' ')[0]} 👋</Text>
-          <Text style={s.sub}>{isMaster ? 'Лента заказов' : 'Мои заказы'}</Text>
+          <Text style={s.sub}>
+            {isMaster ? 'Лента заказов' : total > 0 ? `${total} заказов` : 'Мои заказы'}
+          </Text>
         </View>
         {!isMaster && (
           <TouchableOpacity style={s.fab} onPress={() => navigation.navigate('CreateOrder')}>
