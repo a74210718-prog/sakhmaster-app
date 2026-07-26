@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
-  ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform,
+  ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform, Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { profileApi } from '../../api/profile';
@@ -14,13 +15,37 @@ export default function EditProfileScreen({ navigation }: any) {
 
   const [name,    setName]    = useState(user?.name    ?? '');
   const [phone,   setPhone]   = useState(user?.phone   ?? '');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]         = useState(false);
+  const [avatarUri, setAvatarUri]     = useState<string | null>(null);
+  const [avatarLoading, setAvatarLoading] = useState(false);
 
   // Смена пароля
   const [curPwd,     setCurPwd]     = useState('');
   const [newPwd,     setNewPwd]     = useState('');
   const [newPwdConf, setNewPwdConf] = useState('');
   const [pwdLoading, setPwdLoading] = useState(false);
+
+  const pickAvatar = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.85,
+    });
+    if (!result.canceled && result.assets[0]) {
+      const uri = result.assets[0].uri;
+      setAvatarLoading(true);
+      try {
+        const res = await profileApi.uploadAvatar(uri);
+        setUser(res.data.user);
+        setAvatarUri(uri);
+        Alert.alert('Готово', 'Фото обновлено');
+      } catch {
+        Alert.alert('Ошибка', 'Не удалось загрузить фото');
+      }
+      setAvatarLoading(false);
+    }
+  };
 
   const saveProfile = async () => {
     if (!name.trim()) { Alert.alert('Ошибка', 'Введите имя'); return; }
@@ -63,6 +88,25 @@ export default function EditProfileScreen({ navigation }: any) {
             <Text style={{ color: colors.emerald, fontSize: 28, lineHeight: 32 }}>‹</Text>
           </TouchableOpacity>
           <Text style={s.title}>Редактировать профиль</Text>
+        </View>
+
+        {/* Аватар */}
+        <View style={s.avatarSection}>
+          <TouchableOpacity onPress={pickAvatar} disabled={avatarLoading} style={s.avatarWrap}>
+            {avatarLoading ? (
+              <ActivityIndicator color={colors.emerald} size="large" />
+            ) : (avatarUri ?? user?.avatar) ? (
+              <Image source={{ uri: avatarUri ?? user!.avatar! }} style={s.avatarImg} />
+            ) : (
+              <View style={s.avatarPlaceholder}>
+                <Text style={s.avatarLetter}>{user?.name?.[0]?.toUpperCase() ?? '?'}</Text>
+              </View>
+            )}
+            <View style={s.avatarOverlay}>
+              <Text style={s.avatarOverlayText}>📷</Text>
+            </View>
+          </TouchableOpacity>
+          <Text style={s.avatarHint}>Нажмите для смены фото</Text>
         </View>
 
         {/* Основные данные */}
@@ -110,6 +154,14 @@ export default function EditProfileScreen({ navigation }: any) {
 
 const s = StyleSheet.create({
   root:          { flex: 1, backgroundColor: colors.bg },
+  avatarSection: { alignItems: 'center', paddingVertical: 20 },
+  avatarWrap:    { position: 'relative', width: 90, height: 90 },
+  avatarImg:     { width: 90, height: 90, borderRadius: 28, borderWidth: 2, borderColor: colors.emerald + '60' },
+  avatarPlaceholder: { width: 90, height: 90, borderRadius: 28, backgroundColor: colors.emeraldDim, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.emerald + '60' },
+  avatarLetter:  { fontSize: 40, fontWeight: '700', color: colors.emerald },
+  avatarOverlay: { position: 'absolute', bottom: 0, right: 0, backgroundColor: colors.emerald, borderRadius: 12, width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
+  avatarOverlayText: { fontSize: 14 },
+  avatarHint:    { marginTop: 8, fontSize: 12, color: colors.textMuted },
   header:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 8, marginBottom: 8 },
   back:          { width: 40, alignItems: 'center' },
   title:         { fontSize: 20, fontWeight: '800', color: colors.textPrimary },
