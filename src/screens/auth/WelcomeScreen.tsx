@@ -39,9 +39,18 @@ const FEATURES = [
 ];
 
 const CATEGORIES = [
-  'Электрика', 'Сантехника', 'Плитка', 'Двери',
-  'Окна', 'Потолки', 'Обои', 'Полы',
-  'Кровля', 'Фасад', 'Малярные', 'Демонтаж',
+  { icon: '🏠', name: 'Ремонт' },
+  { icon: '⚡', name: 'Электрика' },
+  { icon: '🔧', name: 'Сантехника' },
+  { icon: '🖼️', name: 'Отделка' },
+  { icon: '🏚️', name: 'Кровля' },
+  { icon: '☀️', name: 'Отопление' },
+  { icon: '🪟', name: 'Окна' },
+  { icon: '🗄️', name: 'Мебель' },
+  { icon: '✨', name: 'Клининг' },
+  { icon: '🚚', name: 'Переезды' },
+  { icon: '🗑️', name: 'Демонтаж' },
+  { icon: '🌿', name: 'Ландшафт' },
 ];
 
 export default function WelcomeScreen() {
@@ -141,18 +150,25 @@ export default function WelcomeScreen() {
 
         {/* ── Категории ──────────────────────────────── */}
         <View style={s.section}>
-          <Text style={s.sectionTitle}>Что можно заказать</Text>
-          <Text style={s.sectionSub}>Любые строительные и ремонтные работы — от розетки до капремонта.</Text>
+          <View style={s.catHeader}>
+            <View style={s.catBadge}>
+              <Text style={s.catBadgeText}>КАТЕГОРИИ</Text>
+            </View>
+            <Text style={s.sectionTitle}>Выберите тип работ</Text>
+          </View>
 
           <View style={s.catGrid}>
             {CATEGORIES.map((cat) => (
               <TouchableOpacity
-                key={cat}
+                key={cat.name}
                 style={s.catTile}
                 onPress={() => nav.navigate('Register')}
                 activeOpacity={0.75}
               >
-                <Text style={s.catText}>{cat}</Text>
+                <View style={s.catIconWrap}>
+                  <Text style={s.catIconText}>{cat.icon}</Text>
+                </View>
+                <Text style={s.catName}>{cat.name}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -385,23 +401,57 @@ const s = StyleSheet.create({
   },
 
   // Категории
+  catHeader: {
+    marginBottom: 16,
+  },
+  catBadge: {
+    backgroundColor: 'rgba(16,185,129,0.12)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 100,
+    marginBottom: 6,
+  },
+  catBadgeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: colors.emerald,
+    letterSpacing: 1.2,
+  },
   catGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
   catTile: {
+    width: '31.5%',
+    minHeight: 100,
     backgroundColor: colors.surface,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    borderRadius: 14,
+    padding: 12,
     borderWidth: 1,
     borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  catText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textSecondary,
+  catIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: 'rgba(16,185,129,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  catIconText: {
+    fontSize: 20,
+  },
+  catName: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    textAlign: 'center',
+    lineHeight: 15,
   },
 
   // CTA
