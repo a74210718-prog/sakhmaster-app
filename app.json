@@ -6,14 +6,12 @@
     "scheme": "sakhmaster",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#1B2230"
     },
-
     "ios": {
       "bundleIdentifier": "ru.sakhmaster.app",
       "buildNumber": "1",
@@ -24,7 +22,6 @@
         "NSPhotoLibraryAddUsageDescription": "Сохранение фото из приложения"
       }
     },
-
     "android": {
       "package": "ru.sakhmaster.app",
       "versionCode": 1,
@@ -35,7 +32,8 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.INTERNET",
-        "android.permission.VIBRATE"
+        "android.permission.VIBRATE",
+        "android.permission.RECORD_AUDIO"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#1B2230",
@@ -45,11 +43,9 @@
       },
       "predictiveBackGestureEnabled": false
     },
-
     "web": {
       "favicon": "./assets/favicon.png"
     },
-
     "plugins": [
       "expo-font",
       "expo-secure-store",
@@ -62,11 +58,11 @@
         }
       ]
     ],
-
     "extra": {
       "eas": {
-        "projectId": "ЗАМЕНИТЬ_ПОСЛЕ_eas_init"
+        "projectId": "2402d8b4-b47b-4687-b03f-7fcb927c5480"
       }
-    }
+    },
+    "owner": "sakhmaster"
   }
 }
