@@ -87,7 +87,8 @@ function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
   return <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>{emoji}</Text>;
 }
 
-const LINKING = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const LINKING: any = {
   prefixes: ['sakhmaster://', 'https://sakhmaster.ru'],
   config: {
     screens: {

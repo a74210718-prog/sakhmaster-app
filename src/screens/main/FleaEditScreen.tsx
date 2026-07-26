@@ -13,7 +13,7 @@ import { api } from '../../api/client';
 interface Category { id: number; name: string }
 interface City     { id: number; name: string }
 
-const CONDITIONS = [
+const CONDITIONS: { key: 'new' | 'good' | 'fair'; label: string; desc: string }[] = [
   { key: 'new',  label: 'Новое',    desc: 'Никогда не использовалось' },
   { key: 'good', label: 'Хорошее',  desc: 'Слегка б/у, отличное состояние' },
   { key: 'fair', label: 'Б/у',      desc: 'Видимые следы использования' },

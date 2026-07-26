@@ -17,6 +17,7 @@ export interface MasterDetail extends Master {
   bio?: string;
   categories?: { id: number; name: string }[];
   phone?: string;
+  portfolio?: { id: number; url: string }[];
 }
 
 export interface MastersResponse {
