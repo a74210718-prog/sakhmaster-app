@@ -56,6 +56,7 @@ export default function ProfileScreen({ navigation }: any) {
         <MenuItem icon="💰" label="Кошелёк" onPress={() => navigation.navigate('Wallet')} />
         <MenuItem icon="📋" label="Мои заказы" onPress={() => navigation.navigate('Tabs', { screen: 'Home' })} />
         <MenuItem icon="🛍️" label="Заказы в магазинах" onPress={() => navigation.navigate('ShopOrders')} />
+        <MenuItem icon="🔩" label="Мои аренды"         onPress={() => navigation.navigate('MyRentals')} />
         {(user?.role === 'master_smz' || user?.role === 'ip_pro') && (
           <>
             <MenuItem icon="🔧" label="Профиль мастера" onPress={() => navigation.navigate('MasterProfileEdit')} />

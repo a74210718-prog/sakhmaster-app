@@ -30,6 +30,10 @@ import MasterStatsScreen       from './src/screens/main/MasterStatsScreen';
 import FleaScreen              from './src/screens/main/FleaScreen';
 import FleaItemScreen          from './src/screens/main/FleaItemScreen';
 import FleaCreateScreen        from './src/screens/main/FleaCreateScreen';
+import RentScreen              from './src/screens/rent/RentScreen';
+import RentItemScreen          from './src/screens/rent/RentItemScreen';
+import RentBookingScreen       from './src/screens/rent/RentBookingScreen';
+import MyRentalsScreen         from './src/screens/rent/MyRentalsScreen';
 import ShopScreen              from './src/screens/shop/ShopScreen';
 import ShopItemScreen          from './src/screens/shop/ShopItemScreen';
 import ShopCartScreen          from './src/screens/shop/ShopCartScreen';
@@ -97,6 +101,14 @@ function MainTabs() {
         options={{
           title: 'Мастера',
           tabBarIcon: ({ focused }) => <TabIcon emoji="🔧" focused={focused} />,
+        }}
+      />
+      <Tab.Screen
+        name="Rent"
+        component={RentScreen}
+        options={{
+          title: 'Аренда',
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🔩" focused={focused} />,
         }}
       />
       <Tab.Screen
@@ -180,7 +192,10 @@ function MainStack() {
       <Stack.Screen name="MasterStats"       component={MasterStatsScreen} />
       <Stack.Screen name="FleaItem"          component={FleaItemScreen} />
       <Stack.Screen name="FleaCreate"        component={FleaCreateScreen} />
-      <Stack.Screen name="ShopItem"          component={ShopItemScreen} />
+      <Stack.Screen name="RentItem"           component={RentItemScreen} />
+      <Stack.Screen name="RentBooking"        component={RentBookingScreen} />
+      <Stack.Screen name="MyRentals"          component={MyRentalsScreen} />
+      <Stack.Screen name="ShopItem"           component={ShopItemScreen} />
       <Stack.Screen name="ShopCart"          component={ShopCartScreen} />
       <Stack.Screen name="ShopCheckout"      component={ShopCheckoutScreen} />
       <Stack.Screen name="ShopOrders"        component={ShopOrdersScreen} />
