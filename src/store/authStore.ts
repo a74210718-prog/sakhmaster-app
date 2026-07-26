@@ -1,15 +1,17 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
+import { api } from '../api/client';
 import { authApi, User } from '../api/auth';
 
 interface AuthState {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login:   (email: string, password: string) => Promise<void>;
-  logout:  () => Promise<void>;
-  restore: () => Promise<void>;
-  setUser: (user: User) => void;
+  login:          (email: string, password: string) => Promise<void>;
+  loginWithToken: (token: string) => Promise<void>;
+  logout:         () => Promise<void>;
+  restore:        () => Promise<void>;
+  setUser:        (user: User) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -21,6 +23,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     const { data } = await authApi.login({ email, password });
     await SecureStore.setItemAsync('auth_token', data.token);
     set({ user: data.user, token: data.token });
+  },
+
+  loginWithToken: async (token: string) => {
+    await SecureStore.setItemAsync('auth_token', token);
+    const { data } = await api.get<{ user: User }>('/auth/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    set({ user: data.user, token });
   },
 
   logout: async () => {

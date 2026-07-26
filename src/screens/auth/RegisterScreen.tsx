@@ -4,9 +4,13 @@ import {
   KeyboardAvoidingView, Platform, ActivityIndicator, Alert, ScrollView,
 } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import * as WebBrowser from 'expo-web-browser';
 import { colors } from '../../theme/colors';
 import { authApi } from '../../api/auth';
+import { api } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function RegisterScreen({ navigation }: any) {
   const [name, setName]         = useState('');
@@ -14,8 +18,28 @@ export default function RegisterScreen({ navigation }: any) {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm]   = useState('');
   const [role, setRole]         = useState<'client'|'master_smz'|'ip_pro'>('client');
-  const [loading, setLoading]   = useState(false);
-  const setUser = useAuthStore.setState;
+  const [loading, setLoading]     = useState(false);
+  const [socialLoading, setSocial] = useState<'vk' | 'yandex' | null>(null);
+  const setUser        = useAuthStore.setState;
+  const loginWithToken = useAuthStore((s) => s.loginWithToken);
+
+  const handleSocial = async (provider: 'vk' | 'yandex') => {
+    setSocial(provider);
+    try {
+      const { data } = await api.get<{ url: string }>(`/auth/social/${provider}/url`);
+      const result = await WebBrowser.openAuthSessionAsync(data.url, 'sakhmaster://');
+      if (result.type !== 'success') return;
+      const urlObj = new URL(result.url);
+      const token  = urlObj.searchParams.get('token');
+      const error  = urlObj.searchParams.get('error');
+      if (error || !token) { Alert.alert('Ошибка', 'Авторизация не удалась'); return; }
+      await loginWithToken(token);
+    } catch (e: any) {
+      Alert.alert('Ошибка', e.message ?? 'Не удалось войти');
+    } finally {
+      setSocial(null);
+    }
+  };
 
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password) {
@@ -78,6 +102,34 @@ export default function RegisterScreen({ navigation }: any) {
           {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Создать аккаунт</Text>}
         </TouchableOpacity>
 
+        {/* Разделитель */}
+        <View style={s.dividerRow}>
+          <View style={s.dividerLine} />
+          <Text style={s.dividerText}>или войдите через</Text>
+          <View style={s.dividerLine} />
+        </View>
+
+        <View style={s.socialRow}>
+          <TouchableOpacity
+            style={[s.socialBtn, s.vkBtn]}
+            onPress={() => handleSocial('vk')}
+            disabled={loading || !!socialLoading}
+          >
+            {socialLoading === 'vk'
+              ? <ActivityIndicator color="#fff" size="small" />
+              : <Text style={s.socialBtnText}>ВКонтакте</Text>}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[s.socialBtn, s.yandexBtn]}
+            onPress={() => handleSocial('yandex')}
+            disabled={loading || !!socialLoading}
+          >
+            {socialLoading === 'yandex'
+              ? <ActivityIndicator color="#fff" size="small" />
+              : <Text style={s.socialBtnText}>Яндекс ID</Text>}
+          </TouchableOpacity>
+        </View>
+
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={s.link}>Уже есть аккаунт? <Text style={{ color: colors.emerald }}>Войти</Text></Text>
         </TouchableOpacity>
@@ -100,4 +152,12 @@ const s = StyleSheet.create({
   btn:           { backgroundColor: colors.emerald, borderRadius:14, paddingVertical:15, alignItems:'center', marginTop:4 },
   btnText:       { color:'#fff', fontWeight:'700', fontSize:16 },
   link:          { textAlign:'center', color: colors.textSecondary, marginTop:8, fontSize:14 },
+  dividerRow:    { flexDirection: 'row', alignItems: 'center', marginVertical: 4 },
+  dividerLine:   { flex: 1, height: 1, backgroundColor: colors.border },
+  dividerText:   { color: colors.textMuted, fontSize: 12, marginHorizontal: 10 },
+  socialRow:     { flexDirection: 'row', gap: 10 },
+  socialBtn:     { flex: 1, borderRadius: 14, paddingVertical: 13, alignItems: 'center' },
+  vkBtn:         { backgroundColor: '#0077FF' },
+  yandexBtn:     { backgroundColor: '#FC3F1D' },
+  socialBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
 });
