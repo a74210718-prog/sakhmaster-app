@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { useAuthStore } from '../../store/authStore';
@@ -39,9 +39,13 @@ export default function ProfileScreen({ navigation }: any) {
     <ScrollView style={st.root} contentContainerStyle={{ paddingBottom: 40 }}>
       {/* Аватар и имя */}
       <View style={[st.hero, { paddingTop: insets.top + 24 }]}>
-        <View style={st.avatar}>
-          <Text style={st.avatarLetter}>{user?.name?.[0]?.toUpperCase() ?? '?'}</Text>
-        </View>
+        {user?.avatar ? (
+          <Image source={{ uri: user.avatar }} style={st.avatarImg} />
+        ) : (
+          <View style={st.avatar}>
+            <Text style={st.avatarLetter}>{user?.name?.[0]?.toUpperCase() ?? '?'}</Text>
+          </View>
+        )}
         <Text style={st.name} numberOfLines={1}>{user?.name}</Text>
         <Text style={st.email} numberOfLines={1} ellipsizeMode="tail">{user?.email}</Text>
         <View style={[st.roleBadge, { borderColor: roleInfo.color + '50', backgroundColor: roleInfo.color + '15' }]}>
@@ -62,6 +66,7 @@ export default function ProfileScreen({ navigation }: any) {
         {(user?.role === 'master_smz' || user?.role === 'ip_pro') && (
           <>
             <MenuItem icon="🔧" label="Профиль мастера" onPress={() => navigation.navigate('MasterProfileEdit')} />
+            <MenuItem icon="👁" label="Мой публичный профиль" onPress={() => navigation.navigate('MasterDetail', { id: user!.id })} />
             <MenuItem icon="📊" label="Моя статистика"  onPress={() => navigation.navigate('MasterStats')} />
             <MenuItem icon="✅" label="Верификация СМЗ" onPress={() => navigation.navigate('SmzVerification')} />
             <MenuItem icon="⭐" label="Подписка PRO"     onPress={() => navigation.navigate('Subscription')} />
@@ -105,6 +110,7 @@ export default function ProfileScreen({ navigation }: any) {
 const st = StyleSheet.create({
   root:         { flex: 1, backgroundColor: colors.bg },
   hero:         { alignItems: 'center', paddingBottom: 28, gap: 8 },
+  avatarImg:    { width: 80, height: 80, borderRadius: 24, borderWidth: 2, borderColor: colors.emerald + '60' },
   avatar:       { width: 80, height: 80, borderRadius: 24, backgroundColor: colors.emeraldDim, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.emerald + '60' },
   avatarLetter: { fontSize: 36, fontWeight: '700', color: colors.emerald },
   name:         { fontSize: 22, fontWeight: '700', color: colors.textPrimary, maxWidth: '85%', textAlign: 'center' },
