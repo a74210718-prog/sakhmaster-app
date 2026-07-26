@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput,
   TouchableOpacity, Switch, ActivityIndicator, Alert,
@@ -22,7 +22,11 @@ export default function CreateOrderScreen({ navigation }: any) {
   const [title, setTitle]           = useState('');
   const [description, setDesc]      = useState('');
   const [budget, setBudget]         = useState('');
-  const [deadline, setDeadline]     = useState('');
+  const [deadlineDay, setDeadlineDay]     = useState('');
+  const [deadlineMonth, setDeadlineMonth] = useState('');
+  const [deadlineYear, setDeadlineYear]   = useState('');
+  const monthRef = useRef<TextInput>(null);
+  const yearRef  = useRef<TextInput>(null);
   const [isUrgent, setIsUrgent]     = useState(false);
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [cityId, setCityId]         = useState<number | null>(null);
@@ -97,7 +101,10 @@ export default function CreateOrderScreen({ navigation }: any) {
       formData.append('category_id', String(categoryId));
       formData.append('city_id', String(cityId));
       formData.append('is_urgent', isUrgent ? '1' : '0');
-      if (deadline.trim()) formData.append('deadline_at', deadline.trim());
+      if (deadlineDay && deadlineMonth && deadlineYear) {
+        const d = `${deadlineYear}-${deadlineMonth.padStart(2, '0')}-${deadlineDay.padStart(2, '0')}`;
+        formData.append('deadline_at', d);
+      }
       photos.forEach((p, i) => formData.append(`photos[${i}]`, p as any));
 
       await api.post('/orders', formData, {
@@ -179,16 +186,51 @@ export default function CreateOrderScreen({ navigation }: any) {
           keyboardType="number-pad"
         />
 
-        <Text style={s.label}>Желаемый срок</Text>
-        <TextInput
-          style={s.input}
-          placeholder="дд.мм.гггг (необязательно)"
-          placeholderTextColor={colors.textMuted}
-          value={deadline}
-          onChangeText={setDeadline}
-          keyboardType="numeric"
-          maxLength={10}
-        />
+        <Text style={s.label}>Желаемый срок (необязательно)</Text>
+        <View style={s.dateRow}>
+          <TextInput
+            style={[s.dateInput, s.dateInputDay]}
+            placeholder="ДД"
+            placeholderTextColor={colors.textMuted}
+            value={deadlineDay}
+            onChangeText={v => {
+              const n = v.replace(/\D/g, '').slice(0, 2);
+              setDeadlineDay(n);
+              if (n.length === 2) monthRef.current?.focus();
+            }}
+            keyboardType="number-pad"
+            maxLength={2}
+            returnKeyType="next"
+          />
+          <Text style={s.dateSep}>/</Text>
+          <TextInput
+            ref={monthRef}
+            style={[s.dateInput, s.dateInputMon]}
+            placeholder="ММ"
+            placeholderTextColor={colors.textMuted}
+            value={deadlineMonth}
+            onChangeText={v => {
+              const n = v.replace(/\D/g, '').slice(0, 2);
+              setDeadlineMonth(n);
+              if (n.length === 2) yearRef.current?.focus();
+            }}
+            keyboardType="number-pad"
+            maxLength={2}
+            returnKeyType="next"
+          />
+          <Text style={s.dateSep}>/</Text>
+          <TextInput
+            ref={yearRef}
+            style={[s.dateInput, s.dateInputYear]}
+            placeholder="ГГГГ"
+            placeholderTextColor={colors.textMuted}
+            value={deadlineYear}
+            onChangeText={v => setDeadlineYear(v.replace(/\D/g, '').slice(0, 4))}
+            keyboardType="number-pad"
+            maxLength={4}
+            returnKeyType="done"
+          />
+        </View>
 
         <Text style={s.label}>Категория *</Text>
         <View style={s.chips}>
@@ -312,6 +354,12 @@ const s = StyleSheet.create({
   cityPicker:      { backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 14, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cityPickerPlaceholder: { color: colors.textMuted, fontSize: 15 },
   cityPickerSelected:    { color: colors.textPrimary, fontSize: 15, fontWeight: '600' },
+  dateRow:        { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  dateInput:      { backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 13, color: colors.textPrimary, fontSize: 16, borderWidth: 1, borderColor: colors.border, textAlign: 'center' },
+  dateInputDay:   { width: 56 },
+  dateInputMon:   { width: 56 },
+  dateInputYear:  { width: 80 },
+  dateSep:        { fontSize: 20, color: colors.textMuted, fontWeight: '300' },
   urgentRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: colors.border, marginTop: 20 },
   urgentLabel:     { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
   urgentSub:       { fontSize: 12, color: colors.textMuted, marginTop: 2 },

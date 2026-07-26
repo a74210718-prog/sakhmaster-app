@@ -160,7 +160,7 @@ export default function ChatScreen({ route, navigation }: any) {
               <Text style={[s.msgText, item.is_mine ? s.msgTextMine : s.msgTextOther]}>
                 {item.text}
               </Text>
-              <Text style={[s.time, item.is_mine ? { textAlign: 'right' } : {}]}>
+              <Text style={[s.time, item.is_mine ? s.timeMine : s.timeOther]}>
                 {new Date(item.created_at).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}
               </Text>
             </View>
@@ -230,7 +230,9 @@ const s = StyleSheet.create({
   msgText:        { fontSize: 15, lineHeight: 21 },
   msgTextMine:    { color: '#fff' },
   msgTextOther:   { color: colors.textPrimary },
-  time:           { fontSize: 10, marginTop: 4, color: 'rgba(255,255,255,0.6)' },
+  time:           { fontSize: 10, marginTop: 4 },
+  timeMine:       { color: 'rgba(255,255,255,0.6)', textAlign: 'right' },
+  timeOther:      { color: colors.textMuted },
   empty:          { alignItems: 'center', paddingTop: 80 },
   emptyText:      { fontSize: 16, color: colors.textSecondary, fontWeight: '600' },
   emptySub:       { fontSize: 13, color: colors.textMuted, marginTop: 6, textAlign: 'center' },
