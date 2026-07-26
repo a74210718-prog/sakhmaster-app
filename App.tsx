@@ -9,6 +9,7 @@ import * as Notifications from 'expo-notifications';
 import { setupNotificationHandler, registerPushToken, getNavigationTarget } from './src/utils/pushNotifications';
 
 import { useAuthStore } from './src/store/authStore';
+import { ordersApi } from './src/api/orders';
 import { useCartStore } from './src/store/cartStore';
 import { useNotificationsStore } from './src/store/notificationsStore';
 import { colors } from './src/theme/colors';
@@ -112,7 +113,15 @@ function MainTabs() {
   const user = useAuthStore((s) => s.user);
   const isMaster = user?.role === 'master_smz' || user?.role === 'ip_pro';
   const isAdmin  = user?.role === 'admin' || user?.role === 'moderator';
-  const unreadCount = useNotificationsStore((s) => s.unreadCount);
+  const unreadCount  = useNotificationsStore((s) => s.unreadCount);
+  const [inWorkCount, setInWorkCount] = React.useState(0);
+
+  React.useEffect(() => {
+    if (!isMaster) return;
+    ordersApi.list({ status: 'in_work' })
+      .then(r => setInWorkCount((r.data as any)?.meta?.total ?? 0))
+      .catch(() => {});
+  }, [isMaster]);
 
   return (
     <Tab.Navigator
@@ -134,6 +143,8 @@ function MainTabs() {
         options={{
           title: isMaster ? 'Лента' : 'Заказы',
           tabBarIcon: ({ focused }) => <TabIcon emoji={isMaster ? '📋' : '🏠'} focused={focused} />,
+          tabBarBadge: isMaster && inWorkCount > 0 ? inWorkCount : undefined,
+          tabBarBadgeStyle: { backgroundColor: colors.emerald, fontSize: 10 },
         }}
       />
       <Tab.Screen
