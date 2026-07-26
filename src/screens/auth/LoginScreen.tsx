@@ -32,7 +32,7 @@ export default function LoginScreen({ navigation }: any) {
       <View style={s.box}>
         {/* Логотип */}
         <Text style={s.logo}>Ладорея</Text>
-        <Text style={s.sub}>Маркетплейс услуг Сахалина</Text>
+        <Text style={s.sub}>Маркетплейс услуг по всей России</Text>
 
         <TextInput
           style={s.input}
