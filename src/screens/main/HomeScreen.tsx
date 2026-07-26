@@ -45,6 +45,40 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function DeadlineBadge({ deadline }: { deadline?: string }) {
+  if (!deadline) return null;
+  const days = Math.ceil((new Date(deadline).getTime() - Date.now()) / 86_400_000);
+  if (days < 0) {
+    return (
+      <View style={{ backgroundColor: colors.rose + '20', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: colors.rose + '50' }}>
+        <Text style={{ color: colors.rose, fontSize: 11, fontWeight: '600' }}>⏰ просрочен</Text>
+      </View>
+    );
+  }
+  if (days === 0) {
+    return (
+      <View style={{ backgroundColor: colors.rose + '20', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: colors.rose + '50' }}>
+        <Text style={{ color: colors.rose, fontSize: 11, fontWeight: '600' }}>⏰ сегодня</Text>
+      </View>
+    );
+  }
+  if (days <= 3) {
+    return (
+      <View style={{ backgroundColor: colors.rose + '15', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: colors.rose + '40' }}>
+        <Text style={{ color: colors.rose, fontSize: 11, fontWeight: '600' }}>⏰ {days} д.</Text>
+      </View>
+    );
+  }
+  if (days <= 7) {
+    return (
+      <View style={{ backgroundColor: colors.amber + '15', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: colors.amber + '40' }}>
+        <Text style={{ color: colors.amber, fontSize: 11, fontWeight: '600' }}>📅 {days} д.</Text>
+      </View>
+    );
+  }
+  return null;
+}
+
 export default function HomeScreen({ navigation }: any) {
   const insets    = useSafeAreaInsets();
   const user      = useAuthStore((s) => s.user);
@@ -163,7 +197,10 @@ export default function HomeScreen({ navigation }: any) {
       </Text>
 
       <View style={s.cardBottom}>
-        <StatusBadge status={item.status} />
+        <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+          <StatusBadge status={item.status} />
+          <DeadlineBadge deadline={item.deadline_at} />
+        </View>
         <View style={s.cardRight}>
           {item.total_sum > 0 && (
             <Text style={s.price}>{item.total_sum.toLocaleString('ru')} ₽</Text>
