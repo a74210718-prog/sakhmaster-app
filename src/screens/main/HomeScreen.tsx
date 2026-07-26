@@ -99,6 +99,7 @@ export default function HomeScreen({ navigation }: any) {
   const [total, setTotal]                 = useState(0);
   const [loadingMore, setLoadingMore]     = useState(false);
   const [pendingPayCount, setPendingPayCount] = useState(0);
+  const [masterInWork, setMasterInWork]   = useState(0);
   const [search, setSearch]               = useState('');
 
   const isAvailableFeed = isMaster && (!activeFilter || activeFilter === 'new');
@@ -165,6 +166,10 @@ export default function HomeScreen({ navigation }: any) {
     if (!isMaster) {
       ordersApi.list({ status: 'pending_agreement', page: 1 })
         .then(r => setPendingPayCount((r.data as OrdersResponse).meta?.total ?? 0))
+        .catch(() => {});
+    } else {
+      ordersApi.list({ status: 'in_work', page: 1 })
+        .then(r => setMasterInWork((r.data as OrdersResponse).meta?.total ?? 0))
         .catch(() => {});
     }
   }, [isMaster]);
@@ -267,6 +272,31 @@ export default function HomeScreen({ navigation }: any) {
           </TouchableOpacity>
         )}
       </View>
+
+      {/* Мини-дашборд для мастера */}
+      {isMaster && masterInWork > 0 && (
+        <TouchableOpacity
+          style={s.masterDash}
+          onPress={() => setActiveFilter('in_work')}
+          activeOpacity={0.85}
+        >
+          <View style={s.masterDashItem}>
+            <Text style={s.masterDashValue}>{masterInWork}</Text>
+            <Text style={s.masterDashLabel}>в работе</Text>
+          </View>
+          <View style={s.masterDashDivider} />
+          <View style={s.masterDashItem}>
+            <Text style={[s.masterDashValue, { color: colors.sky }]}>{total}</Text>
+            <Text style={s.masterDashLabel}>новых</Text>
+          </View>
+          <View style={s.masterDashDivider} />
+          <View style={[s.masterDashItem, { flex: 2 }]}>
+            <Text style={[s.masterDashLabel, { color: colors.emerald, fontSize: 12 }]}>
+              💼 Посмотреть заказы в работе →
+            </Text>
+          </View>
+        </TouchableOpacity>
+      )}
 
       {/* Баннер «ждут оплаты» — только клиентам */}
       {!isMaster && pendingPayCount > 0 && activeFilter !== 'pending_agreement' && (
@@ -412,6 +442,11 @@ const s = StyleSheet.create({
   emptyIcon:       { fontSize: 48, marginBottom: 12 },
   emptyText:       { fontSize: 16, color: colors.textSecondary, fontWeight: '600' },
   emptySub:        { fontSize: 13, color: colors.textMuted, marginTop: 6, textAlign: 'center', paddingHorizontal: 24 },
+  masterDash:      { marginHorizontal: 16, marginBottom: 8, backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.emerald + '30', flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16, gap: 0 },
+  masterDashItem:  { flex: 1, alignItems: 'center', gap: 2 },
+  masterDashValue: { fontSize: 20, fontWeight: '800', color: colors.emerald },
+  masterDashLabel: { fontSize: 10, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 },
+  masterDashDivider: { width: 1, height: 32, backgroundColor: colors.border, marginHorizontal: 4 },
   payBanner:       { marginHorizontal: 16, marginBottom: 8, backgroundColor: colors.amberDim, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: colors.amber + '50' },
   payBannerText:   { fontSize: 14, fontWeight: '700', color: colors.amber },
   payBannerArrow:  { fontSize: 20, color: colors.amber },
