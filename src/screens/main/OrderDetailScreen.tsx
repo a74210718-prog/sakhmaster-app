@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, ActivityIndicator,
   TouchableOpacity, Alert, Image, TextInput, KeyboardAvoidingView, Platform,
+  RefreshControl,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
@@ -49,6 +50,7 @@ export default function OrderDetailScreen({ route, navigation }: any) {
   const [payLoading, setPayLoading] = useState(false);
   const [hasReview, setHasReview]       = useState(false);
   const [unreadChat, setUnreadChat]     = useState(0);
+  const [refreshing, setRefreshing]     = useState(false);
   const [proposalMode, setProposalMode] = useState(false);
   const [proposalPrice, setProposalPrice] = useState('');
   const [proposalLoading, setProposalLoading] = useState(false);
@@ -63,6 +65,7 @@ export default function OrderDetailScreen({ route, navigation }: any) {
       }
     } catch { navigation.goBack(); }
     setLoading(false);
+    setRefreshing(false);
   };
 
   useEffect(() => { reload(); }, [id]);
@@ -162,7 +165,13 @@ export default function OrderDetailScreen({ route, navigation }: any) {
   const actions = getActions(order, isMaster);
 
   return (
-    <ScrollView style={s.root} contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
+    <ScrollView
+      style={s.root}
+      contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); reload(); }} tintColor={colors.emerald} />
+      }
+    >
       {/* Хедер */}
       <View style={[s.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.back}>
