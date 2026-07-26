@@ -59,14 +59,22 @@ export default function ProfileScreen({ navigation }: any) {
           <>
             <MenuItem icon="🔧" label="Профиль мастера" onPress={() => navigation.navigate('MasterProfileEdit')} />
             <MenuItem icon="📊" label="Моя статистика"  onPress={() => navigation.navigate('MasterStats')} />
+            <MenuItem icon="✅" label="Верификация СМЗ" onPress={() => navigation.navigate('SmzVerification')} />
+            <MenuItem icon="⭐" label="Подписка PRO"     onPress={() => navigation.navigate('Subscription')} />
           </>
         )}
+      </View>
+
+      <View style={st.section}>
+        <Text style={st.sectionTitle}>Сервисы</Text>
+        <MenuItem icon="🤖" label="ИИ-ассистент" onPress={() => navigation.navigate('AiChat')} />
       </View>
 
       <View style={st.section}>
         <Text style={st.sectionTitle}>Настройки</Text>
         <MenuItem icon="✏️" label="Редактировать профиль" onPress={() => navigation.navigate('EditProfile')} />
         <MenuItem icon="🔔" label="Уведомления" onPress={() => navigation.navigate('Tabs', { screen: 'Notifications' })} />
+        <MenuItem icon="📄" label="Документы" onPress={() => navigation.navigate('Legal')} />
       </View>
 
       <View style={st.section}>

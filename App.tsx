@@ -34,6 +34,9 @@ import AdminUsersScreen        from './src/screens/admin/AdminUsersScreen';
 import AdminOrdersScreen       from './src/screens/admin/AdminOrdersScreen';
 import AdminPayoutsScreen      from './src/screens/admin/AdminPayoutsScreen';
 import AdminSettingsScreen     from './src/screens/admin/AdminSettingsScreen';
+import SubscriptionScreen      from './src/screens/main/SubscriptionScreen';
+import SmzVerificationScreen   from './src/screens/main/SmzVerificationScreen';
+import AiChatScreen            from './src/screens/main/AiChatScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
@@ -99,6 +102,14 @@ function MainTabs() {
         }}
       />
       <Tab.Screen
+        name="AiTab"
+        component={AiChatScreen}
+        options={{
+          title: 'ИИ',
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🤖" focused={focused} />,
+        }}
+      />
+      <Tab.Screen
         name="Notifications"
         component={NotificationsScreen}
         options={{
@@ -160,6 +171,9 @@ function MainStack() {
       <Stack.Screen name="AdminOrders"       component={AdminOrdersScreen} />
       <Stack.Screen name="AdminPayouts"      component={AdminPayoutsScreen} />
       <Stack.Screen name="AdminSettings"     component={AdminSettingsScreen} />
+      <Stack.Screen name="Subscription"      component={SubscriptionScreen} />
+      <Stack.Screen name="SmzVerification"   component={SmzVerificationScreen} />
+      <Stack.Screen name="AiChat"            component={AiChatScreen} />
     </Stack.Navigator>
   );
 }
