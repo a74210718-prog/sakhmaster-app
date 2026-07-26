@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, ActivityIndicator,
-  TouchableOpacity, Alert, Image,
+  TouchableOpacity, Alert, Image, TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
@@ -47,8 +47,11 @@ export default function OrderDetailScreen({ route, navigation }: any) {
   const [loading, setLoading]       = useState(true);
   const [actLoading, setActLoading] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
-  const [hasReview, setHasReview]   = useState(false);
-  const [unreadChat, setUnreadChat] = useState(0);
+  const [hasReview, setHasReview]       = useState(false);
+  const [unreadChat, setUnreadChat]     = useState(0);
+  const [proposalMode, setProposalMode] = useState(false);
+  const [proposalPrice, setProposalPrice] = useState('');
+  const [proposalLoading, setProposalLoading] = useState(false);
 
   const reload = async () => {
     try {
@@ -69,6 +72,24 @@ export default function OrderDetailScreen({ route, navigation }: any) {
       .then(r => setUnreadChat(r.data.count))
       .catch(() => {});
   }, [id]);
+
+  const handleProposePrice = async () => {
+    const price = parseFloat(proposalPrice.replace(',', '.'));
+    if (!price || price < 1) {
+      Alert.alert('Ошибка', 'Введите корректную сумму');
+      return;
+    }
+    setProposalLoading(true);
+    try {
+      await ordersApi.proposePrice(id, price);
+      setProposalMode(false);
+      setProposalPrice('');
+      reload();
+    } catch (e: any) {
+      Alert.alert('Ошибка', e.response?.data?.message ?? 'Не удалось выставить счёт');
+    }
+    setProposalLoading(false);
+  };
 
   const handleAction = (status: string, label: string) => {
     Alert.alert(label, 'Подтвердить действие?', [
@@ -274,6 +295,56 @@ export default function OrderDetailScreen({ route, navigation }: any) {
         </View>
       )}
 
+      {/* Выставить счёт — мастер-исполнитель в статусе in_work */}
+      {isMaster && order.contractor?.id === user?.id && order.status === 'in_work' && (
+        <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
+          {!proposalMode ? (
+            <TouchableOpacity
+              style={[s.actionBtn, { backgroundColor: colors.amber }]}
+              onPress={() => setProposalMode(true)}
+              activeOpacity={0.85}
+            >
+              <Text style={s.actionText}>💰  Выставить счёт клиенту</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={s.proposalCard}>
+              <Text style={s.proposalTitle}>Укажите сумму заказа</Text>
+              <Text style={s.proposalSub}>Клиент получит уведомление и оплатит через T-Bank</Text>
+              <View style={s.proposalRow}>
+                <TextInput
+                  style={s.proposalInput}
+                  placeholder="Сумма в рублях"
+                  placeholderTextColor={colors.textMuted}
+                  keyboardType="numeric"
+                  value={proposalPrice}
+                  onChangeText={setProposalPrice}
+                  autoFocus
+                />
+                <Text style={s.proposalCurrency}>₽</Text>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+                <TouchableOpacity
+                  style={[s.actionBtn, { flex: 1, backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.border }]}
+                  onPress={() => { setProposalMode(false); setProposalPrice(''); }}
+                >
+                  <Text style={[s.actionText, { color: colors.textSecondary }]}>Отмена</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[s.actionBtn, { flex: 1.6, backgroundColor: colors.amber }]}
+                  onPress={handleProposePrice}
+                  disabled={proposalLoading}
+                >
+                  {proposalLoading
+                    ? <ActivityIndicator color="#fff" />
+                    : <Text style={s.actionText}>Отправить</Text>
+                  }
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
+      )}
+
       {/* Кнопка отзыва — клиент после completed */}
       {user?.role === 'client' && order.status === 'completed' && order.contractor && (
         <View style={{ paddingHorizontal: 16, marginTop: 10 }}>
@@ -321,5 +392,11 @@ const s = StyleSheet.create({
   actionText:   { color: '#fff', fontWeight: '700', fontSize: 16 },
   payBtn:       { backgroundColor: '#FFDD2D' },
   payNote:      { fontSize: 11, color: colors.textMuted, textAlign: 'center', marginTop: 6 },
-  reviewDone:   { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: colors.border },
+  reviewDone:      { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: colors.border },
+  proposalCard:    { backgroundColor: colors.surface, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.amber + '40', gap: 4 },
+  proposalTitle:   { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
+  proposalSub:     { fontSize: 12, color: colors.textMuted, marginBottom: 8 },
+  proposalRow:     { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  proposalInput:   { flex: 1, backgroundColor: colors.surface2, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontSize: 20, fontWeight: '700', borderWidth: 1, borderColor: colors.border },
+  proposalCurrency:{ fontSize: 24, fontWeight: '700', color: colors.amber },
 });

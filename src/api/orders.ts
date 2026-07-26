@@ -22,8 +22,9 @@ export interface OrdersResponse {
 }
 
 export const ordersApi = {
-  list:      (params?: Record<string, any>) => api.get<OrdersResponse>('/orders', { params }),
-  show:      (id: number)                   => api.get<{ data: Order }>(`/orders/${id}`),
-  create:    (data: any)                    => api.post<{ data: Order }>('/orders', data),
-  takeOrder: (id: number)                   => api.patch(`/orders/${id}/status`, {}),
+  list:         (params?: Record<string, any>) => api.get<OrdersResponse>('/orders', { params }),
+  show:         (id: number)                   => api.get<{ data: Order }>(`/orders/${id}`),
+  create:       (data: any)                    => api.post<{ data: Order }>('/orders', data),
+  takeOrder:    (id: number)                   => api.patch(`/orders/${id}/status`, {}),
+  proposePrice: (id: number, price: number)    => api.post<{ data: Order }>(`/orders/${id}/propose-price`, { price }),
 };
