@@ -1,15 +1,35 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity,
-  KeyboardAvoidingView, Platform, ActivityIndicator,
+  KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuthStore } from '../../store/authStore';
 import { colors } from '../../theme/colors';
 import { chatApi, ChatMessage } from '../../api/chat';
 
+const QUICK_REPLIES_MASTER = [
+  'Готов взяться за работу',
+  'Уточните детали, пожалуйста',
+  'Выезд возможен завтра',
+  'Стоимость уточню после осмотра',
+  'Работа выполнена, проверяйте',
+];
+
+const QUICK_REPLIES_CLIENT = [
+  'Спасибо за быстрый ответ!',
+  'Когда сможете приступить?',
+  'Оплата после выполнения',
+  'Жду вас по адресу',
+  'Всё устраивает, принято',
+];
+
 export default function ChatScreen({ route, navigation }: any) {
   const { orderId, orderTitle } = route.params as { orderId: number; orderTitle?: string };
-  const insets = useSafeAreaInsets();
+  const insets  = useSafeAreaInsets();
+  const user    = useAuthStore(s => s.user);
+  const isMaster = user?.role === 'master_smz' || user?.role === 'ip_pro';
+  const quickReplies = isMaster ? QUICK_REPLIES_MASTER : QUICK_REPLIES_CLIENT;
 
   const [messages, setMessages]       = useState<ChatMessage[]>([]);
   const [loading, setLoading]         = useState(true);
@@ -148,6 +168,26 @@ export default function ChatScreen({ route, navigation }: any) {
         />
       )}
 
+      {/* Быстрые ответы */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={s.quickBar}
+        contentContainerStyle={s.quickBarContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        {quickReplies.map((qr) => (
+          <TouchableOpacity
+            key={qr}
+            style={s.quickBtn}
+            onPress={() => setText(qr)}
+            activeOpacity={0.75}
+          >
+            <Text style={s.quickBtnText}>{qr}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
       {/* Поле ввода */}
       <View style={[s.inputRow, { paddingBottom: insets.bottom + 8 }]}>
         <TextInput
@@ -198,4 +238,8 @@ const s = StyleSheet.create({
   input:          { flex: 1, backgroundColor: colors.surface2, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, color: colors.textPrimary, fontSize: 15, maxHeight: 100, borderWidth: 1, borderColor: colors.border },
   sendBtn:        { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.emerald, alignItems: 'center', justifyContent: 'center' },
   sendBtnDisabled: { opacity: 0.4 },
+  quickBar:       { flexGrow: 0, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface },
+  quickBarContent:{ paddingHorizontal: 12, paddingVertical: 8, gap: 8 },
+  quickBtn:       { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 16, backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.border },
+  quickBtnText:   { fontSize: 12, color: colors.textSecondary, fontWeight: '500' },
 });
