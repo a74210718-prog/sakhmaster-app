@@ -80,15 +80,19 @@ export default function AiChatScreen({ navigation }: any) {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={0}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 24}
     >
       <View style={[s.root, { paddingTop: insets.top }]}>
         {/* Хедер */}
         <View style={s.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={s.back}>
-            <Text style={s.backText}>‹ Назад</Text>
-          </TouchableOpacity>
+          {navigation.canGoBack() ? (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={s.back}>
+              <Text style={s.backText}>‹ Назад</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={{ width: 60 }} />
+          )}
           <View style={{ alignItems: 'center' }}>
             {agent && <Text style={{ fontSize: 20 }}>{agent.icon}</Text>}
             <Text style={s.headerTitle}>{agent?.name ?? 'ИИ-ассистент'}</Text>

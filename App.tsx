@@ -66,6 +66,7 @@ import AdminSettingsScreen     from './src/screens/admin/AdminSettingsScreen';
 import SubscriptionScreen      from './src/screens/main/SubscriptionScreen';
 import SmzVerificationScreen   from './src/screens/main/SmzVerificationScreen';
 import AiChatScreen            from './src/screens/main/AiChatScreen';
+import MoreScreen, { GridIcon } from './src/screens/main/MoreScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
@@ -94,11 +95,11 @@ const LINKING: any = {
     screens: {
       Tabs: {
         screens: {
-          Home:          'orders',
-          Notifications: 'notifications',
-          Profile:       'profile',
+          Home:    'orders',
+          Profile: 'profile',
         },
       },
+      Notifications:  'notifications',
       OrderDetail:    'order/:id',
       ContractDetail: 'contract/:id',
       MyRentals:      'my-rentals',
@@ -112,9 +113,8 @@ const LINKING: any = {
 
 function MainTabs() {
   const user = useAuthStore((s) => s.user);
-  const isMaster = user?.role === 'master_smz' || user?.role === 'ip_pro';
-  const isAdmin  = user?.role === 'admin' || user?.role === 'moderator';
-  const unreadCount  = useNotificationsStore((s) => s.unreadCount);
+  const isMaster    = user?.role === 'master_smz' || user?.role === 'ip_pro';
+  const unreadCount = useNotificationsStore((s) => s.unreadCount);
   const [inWorkCount, setInWorkCount] = React.useState(0);
 
   React.useEffect(() => {
@@ -142,7 +142,7 @@ function MainTabs() {
         name="Home"
         component={HomeScreen}
         options={{
-          title: isMaster ? 'Лента' : 'Заказы',
+          title: isMaster ? 'Лента' : 'Главная',
           tabBarIcon: ({ focused }) => <TabIcon emoji={isMaster ? '📋' : '🏠'} focused={focused} />,
           tabBarBadge: isMaster && inWorkCount > 0 ? inWorkCount : undefined,
           tabBarBadgeStyle: { backgroundColor: colors.emerald, fontSize: 10 },
@@ -153,31 +153,7 @@ function MainTabs() {
         component={MastersScreen}
         options={{
           title: 'Мастера',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🔧" focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Rent"
-        component={RentScreen}
-        options={{
-          title: 'Аренда',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🔩" focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Shop"
-        component={ShopScreen}
-        options={{
-          title: 'Магазин',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🛍️" focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Flea"
-        component={FleaScreen}
-        options={{
-          title: 'Барахолка',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🏷️" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🔍" focused={focused} />,
         }}
       />
       <Tab.Screen
@@ -189,26 +165,15 @@ function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="Notifications"
-        component={NotificationsScreen}
+        name="More"
+        component={MoreScreen}
         options={{
-          title: 'Уведомления',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🔔" focused={focused} />,
+          title: 'Ещё',
+          tabBarIcon: ({ focused }) => <GridIcon focused={focused} />,
           tabBarBadge: unreadCount > 0 ? (unreadCount > 99 ? '99+' : unreadCount) : undefined,
           tabBarBadgeStyle: { backgroundColor: colors.rose, fontSize: 10 },
         }}
       />
-      {isAdmin && (
-        <Tab.Screen
-          name="Admin"
-          component={AdminScreen}
-          options={{
-            title: 'Админ',
-            tabBarIcon: ({ focused }) => <TabIcon emoji="⚡" focused={focused} />,
-            tabBarBadgeStyle: { backgroundColor: colors.rose },
-          }}
-        />
-      )}
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
@@ -277,6 +242,12 @@ function MainStack() {
       <Stack.Screen name="Subscription"      component={SubscriptionScreen} />
       <Stack.Screen name="SmzVerification"   component={SmzVerificationScreen} />
       <Stack.Screen name="AiChat"            component={AiChatScreen} />
+      {/* Разделы, переехавшие из вкладок в стек */}
+      <Stack.Screen name="Rent"             component={RentScreen} />
+      <Stack.Screen name="Shop"             component={ShopScreen} />
+      <Stack.Screen name="Flea"             component={FleaScreen} />
+      <Stack.Screen name="Notifications"    component={NotificationsScreen} />
+      <Stack.Screen name="Admin"            component={AdminScreen} />
     </Stack.Navigator>
   );
 }
