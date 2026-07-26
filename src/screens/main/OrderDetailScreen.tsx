@@ -266,6 +266,23 @@ export default function OrderDetailScreen({ route, navigation }: any) {
         </View>
       )}
 
+      {/* Инфо-блок для статуса ожидания оплаты */}
+      {order.status === 'pending_agreement' && (
+        <View style={s.infoBox}>
+          {isMaster ? (
+            <>
+              <Text style={s.infoTitle}>⏳ Ждём оплату от клиента</Text>
+              <Text style={s.infoText}>Клиент получил уведомление. Как только оплата пройдёт — вы сможете приступить к работе.</Text>
+            </>
+          ) : (
+            <>
+              <Text style={s.infoTitle}>💳 Мастер выставил счёт</Text>
+              <Text style={s.infoText}>Оплатите заказ. Деньги будут заморожены на платформе до приёмки — мастер их не получит до завершения.</Text>
+            </>
+          )}
+        </View>
+      )}
+
       {/* Кнопка оплаты — клиент, статус pending_agreement, есть сумма */}
       {!isMaster && order.status === 'pending_agreement' && order.total_sum > 0 && (
         <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
@@ -402,6 +419,9 @@ const s = StyleSheet.create({
   payBtn:       { backgroundColor: '#FFDD2D' },
   payNote:      { fontSize: 11, color: colors.textMuted, textAlign: 'center', marginTop: 6 },
   reviewDone:      { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: colors.border },
+  infoBox:         { margin: 16, marginBottom: 0, backgroundColor: colors.amberDim, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: colors.amber + '40', gap: 4 },
+  infoTitle:       { fontSize: 14, fontWeight: '700', color: colors.amber },
+  infoText:        { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
   proposalCard:    { backgroundColor: colors.surface, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.amber + '40', gap: 4 },
   proposalTitle:   { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
   proposalSub:     { fontSize: 12, color: colors.textMuted, marginBottom: 8 },
