@@ -9,6 +9,7 @@ import { colors } from '../../theme/colors';
 import { useAuthStore } from '../../store/authStore';
 import { ordersApi, Order, OrdersResponse } from '../../api/orders';
 import { api } from '../../api/client';
+import { timeAgo } from '../../utils/timeAgo';
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   new:                { label: 'Новый',          color: colors.sky },
@@ -212,7 +213,7 @@ export default function HomeScreen({ navigation }: any) {
       ) : null}
 
       <Text style={s.cardMeta} numberOfLines={1}>
-        {[item.category?.name, item.city?.name].filter(Boolean).join(' · ')}
+        {[item.category?.name, item.city?.name, timeAgo(item.created_at)].filter(Boolean).join(' · ')}
       </Text>
 
       {!isMaster && item.contractor && (

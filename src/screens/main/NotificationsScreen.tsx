@@ -8,6 +8,7 @@ import { colors } from '../../theme/colors';
 import { api } from '../../api/client';
 import { getNavigationTarget } from '../../utils/pushNotifications';
 import { useNotificationsStore } from '../../store/notificationsStore';
+import { timeAgo } from '../../utils/timeAgo';
 
 interface AppNotification {
   id: string;
@@ -90,11 +91,7 @@ export default function NotificationsScreen({ navigation }: any) {
         </View>
         <View style={{ flex: 1, gap: 2 }}>
           <Text style={[s.message, isUnread && s.messageUnread]} numberOfLines={3}>{text}</Text>
-          <Text style={s.date}>
-            {new Date(item.created_at).toLocaleString('ru', {
-              day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
-            })}
-          </Text>
+          <Text style={s.date}>{timeAgo(item.created_at)}</Text>
         </View>
         <View style={s.right}>
           {isUnread && <View style={s.dot} />}
