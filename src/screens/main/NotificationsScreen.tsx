@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { api } from '../../api/client';
 import { getNavigationTarget } from '../../utils/pushNotifications';
+import { useNotificationsStore } from '../../store/notificationsStore';
 
 interface AppNotification {
   id: string;
@@ -27,6 +28,7 @@ interface AppNotification {
 
 export default function NotificationsScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
+  const { unreadCount, setUnreadCount, decrement, reset } = useNotificationsStore();
   const [notifs,     setNotifs]     = useState<AppNotification[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -39,7 +41,9 @@ export default function NotificationsScreen({ navigation }: any) {
     try {
       const { data } = await api.get('/notifications', { params: { page: p } });
       setNotifs(p === 1 ? (data.data ?? []) : prev => [...prev, ...(data.data ?? [])]);
-      setUnread(data.unread_count ?? 0);
+      const cnt = data.unread_count ?? 0;
+      setUnread(cnt);
+      setUnreadCount(cnt);
       setLastPage(data.meta?.last_page ?? 1);
       setPage(p);
     } catch {}
@@ -54,6 +58,7 @@ export default function NotificationsScreen({ navigation }: any) {
       api.post('/notifications/read', { id: item.id }).catch(() => {});
       setNotifs(prev => prev.map(n => n.id === item.id ? { ...n, read_at: new Date().toISOString() } : n));
       setUnread(u => Math.max(0, u - 1));
+      decrement();
     }
 
     const nav = getNavigationTarget(item.data);
@@ -64,6 +69,7 @@ export default function NotificationsScreen({ navigation }: any) {
     api.post('/notifications/read', {}).catch(() => {});
     setNotifs(prev => prev.map(n => ({ ...n, read_at: n.read_at ?? new Date().toISOString() })));
     setUnread(0);
+    reset();
   };
 
   const renderItem = ({ item }: { item: AppNotification }) => {

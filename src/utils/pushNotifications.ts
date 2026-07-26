@@ -50,17 +50,27 @@ export async function registerPushToken(): Promise<void> {
 }
 
 export function getNavigationTarget(data: Record<string, any>): { screen: string; params?: any } | null {
-  const screen = data?.screen;
-  if (!screen) return null;
+  if (!data) return null;
 
-  const id = data.id ? Number(data.id) : undefined;
-
-  switch (screen) {
-    case 'OrderDetail':    return { screen: 'OrderDetail',    params: { id } };
-    case 'ContractDetail': return { screen: 'ContractDetail', params: { id } };
-    case 'MyRentals':      return { screen: 'MyRentals' };
-    case 'FleaDeals':      return { screen: 'FleaDeals' };
-    case 'ShopOrders':     return { screen: 'ShopOrders' };
-    default: return null;
+  // Новый формат: поле screen из toExpoPush()
+  const screen = data.screen;
+  if (screen) {
+    const id = data.id ? Number(data.id) : undefined;
+    switch (screen) {
+      case 'OrderDetail':    return { screen: 'OrderDetail',    params: { id } };
+      case 'ContractDetail': return { screen: 'ContractDetail', params: { id } };
+      case 'MyRentals':      return { screen: 'MyRentals' };
+      case 'FleaDeals':      return { screen: 'FleaDeals' };
+      case 'ShopOrders':     return { screen: 'ShopOrders' };
+      default: return null;
+    }
   }
+
+  // Legacy формат: данные из toDatabase() без поля screen
+  if (data.order_id)    return { screen: 'OrderDetail',    params: { id: Number(data.order_id) } };
+  if (data.contract_id) return { screen: 'ContractDetail', params: { id: Number(data.contract_id) } };
+  if (data.booking_id)  return { screen: 'MyRentals' };
+  if (data.listing_id)  return { screen: 'FleaDeals' };
+
+  return null;
 }

@@ -10,6 +10,7 @@ import { setupNotificationHandler, registerPushToken, getNavigationTarget } from
 
 import { useAuthStore } from './src/store/authStore';
 import { useCartStore } from './src/store/cartStore';
+import { useNotificationsStore } from './src/store/notificationsStore';
 import { colors } from './src/theme/colors';
 
 import WelcomeScreen       from './src/screens/auth/WelcomeScreen';
@@ -85,10 +86,33 @@ function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
   return <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>{emoji}</Text>;
 }
 
+const LINKING = {
+  prefixes: ['sakhmaster://', 'https://sakhmaster.ru'],
+  config: {
+    screens: {
+      Tabs: {
+        screens: {
+          Home:          'orders',
+          Notifications: 'notifications',
+          Profile:       'profile',
+        },
+      },
+      OrderDetail:    'order/:id',
+      ContractDetail: 'contract/:id',
+      MyRentals:      'my-rentals',
+      FleaDeals:      'flea-deals',
+      Wallet:         'wallet',
+      ShopOrders:     'shop-orders',
+      Contracts:      'contracts',
+    },
+  },
+};
+
 function MainTabs() {
   const user = useAuthStore((s) => s.user);
   const isMaster = user?.role === 'master_smz' || user?.role === 'ip_pro';
   const isAdmin  = user?.role === 'admin' || user?.role === 'moderator';
+  const unreadCount = useNotificationsStore((s) => s.unreadCount);
 
   return (
     <Tab.Navigator
@@ -158,6 +182,8 @@ function MainTabs() {
         options={{
           title: 'Уведомления',
           tabBarIcon: ({ focused }) => <TabIcon emoji="🔔" focused={focused} />,
+          tabBarBadge: unreadCount > 0 ? (unreadCount > 99 ? '99+' : unreadCount) : undefined,
+          tabBarBadgeStyle: { backgroundColor: colors.rose, fontSize: 10 },
         }}
       />
       {isAdmin && (
@@ -250,10 +276,15 @@ export default function App() {
   const restoreCart = useCartStore((s) => s.restore);
   const navRef = useRef<any>(null);
 
+  const fetchUnreadCount = useNotificationsStore((s) => s.fetchUnreadCount);
+
   useEffect(() => { restore(); restoreCart(); }, []);
 
   useEffect(() => {
-    if (user) registerPushToken().catch(() => {});
+    if (user) {
+      registerPushToken().catch(() => {});
+      fetchUnreadCount();
+    }
   }, [user?.id]);
 
   useEffect(() => {
@@ -280,7 +311,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer theme={NAV_THEME} ref={navRef}>
+      <NavigationContainer theme={NAV_THEME} ref={navRef} linking={LINKING}>
         <StatusBar style="light" />
         {user ? <MainStack /> : <AuthStack />}
       </NavigationContainer>
