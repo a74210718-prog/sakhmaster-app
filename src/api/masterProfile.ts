@@ -10,6 +10,11 @@ export interface MasterStats {
   earned_month:     number;
 }
 
+export interface PortfolioPhoto {
+  id:  number;
+  url: string;
+}
+
 export interface MasterOwnProfile {
   id:             number;
   name:           string;
@@ -22,6 +27,7 @@ export interface MasterOwnProfile {
   reviews_count:  number;
   categories:     { id: number; name: string }[];
   is_pro:         boolean;
+  portfolio?:     PortfolioPhoto[];
 }
 
 export const masterProfileApi = {
@@ -29,4 +35,14 @@ export const masterProfileApi = {
   update: (data: { specialization?: string; bio?: string; category_ids?: number[] }) =>
             api.patch<{ data: MasterOwnProfile }>('/master/profile', data),
   stats:  () => api.get<MasterStats>('/master/stats'),
+
+  addPhoto: (uri: string, mimeType = 'image/jpeg', fileName = 'photo.jpg') => {
+    const form = new FormData();
+    form.append('photo', { uri, type: mimeType, name: fileName } as any);
+    return api.post<{ data: PortfolioPhoto }>('/master/portfolio', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  deletePhoto: (id: number) => api.delete(`/master/portfolio/${id}`),
 };

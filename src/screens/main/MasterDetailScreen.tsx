@@ -112,6 +112,18 @@ export default function MasterDetailScreen({ route, navigation }: any) {
         </View>
       ) : null}
 
+      {/* Портфолио */}
+      {master.portfolio && master.portfolio.length > 0 && (
+        <View style={{ marginTop: 12 }}>
+          <Text style={s.sectionTitle}>Портфолио ({master.portfolio.length})</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}>
+            {master.portfolio.map((p: any) => (
+              <Image key={p.id} source={{ uri: p.url }} style={{ width: 140, height: 105, borderRadius: 12 }} />
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       {/* Отзывы */}
       {reviews.length > 0 && (
         <View style={{ marginTop: 12 }}>

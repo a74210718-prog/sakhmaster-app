@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput,
   TouchableOpacity, ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
+  Image, FlatList,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
 import { colors } from '../../theme/colors';
-import { masterProfileApi, MasterOwnProfile } from '../../api/masterProfile';
+import { masterProfileApi, MasterOwnProfile, PortfolioPhoto } from '../../api/masterProfile';
 import { api } from '../../api/client';
 
 interface Category { id: number; name: string }
@@ -18,6 +20,8 @@ export default function MasterProfileEditScreen({ navigation }: any) {
   const [bio,            setBio]            = useState('');
   const [categories,     setCategories]     = useState<Category[]>([]);
   const [selectedCats,   setSelectedCats]   = useState<number[]>([]);
+  const [portfolio,      setPortfolio]      = useState<PortfolioPhoto[]>([]);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [loading,        setLoading]        = useState(true);
   const [saving,         setSaving]         = useState(false);
 
@@ -31,6 +35,7 @@ export default function MasterProfileEditScreen({ navigation }: any) {
       setSpecialization(p.specialization ?? '');
       setBio(p.bio ?? '');
       setSelectedCats(p.categories.map(c => c.id));
+      setPortfolio(p.portfolio ?? []);
       setCategories(catsRes.data.data ?? (catsRes.data as any) ?? []);
     }).catch(() => {
       Alert.alert('Ошибка', 'Не удалось загрузить профиль');
@@ -42,6 +47,53 @@ export default function MasterProfileEditScreen({ navigation }: any) {
     setSelectedCats(prev =>
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     );
+  };
+
+  const pickPhoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Нет доступа', 'Разрешите доступ к галерее в настройках');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+    if (result.canceled) return;
+    const asset = result.assets[0];
+    if (portfolio.length >= 10) {
+      Alert.alert('Лимит', 'Максимум 10 фото в портфолио');
+      return;
+    }
+    setUploadingPhoto(true);
+    try {
+      const ext = asset.uri.split('.').pop() ?? 'jpg';
+      const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+      const { data } = await masterProfileApi.addPhoto(asset.uri, mime, `portfolio.${ext}`);
+      setPortfolio(prev => [...prev, data.data]);
+    } catch (e: any) {
+      Alert.alert('Ошибка', e.response?.data?.message ?? 'Не удалось загрузить фото');
+    }
+    setUploadingPhoto(false);
+  };
+
+  const removePhoto = (id: number) => {
+    Alert.alert('Удалить фото?', '', [
+      { text: 'Отмена', style: 'cancel' },
+      {
+        text: 'Удалить', style: 'destructive',
+        onPress: async () => {
+          try {
+            await masterProfileApi.deletePhoto(id);
+            setPortfolio(prev => prev.filter(p => p.id !== id));
+          } catch {
+            Alert.alert('Ошибка', 'Не удалось удалить фото');
+          }
+        },
+      },
+    ]);
   };
 
   const save = async () => {
@@ -141,6 +193,35 @@ export default function MasterProfileEditScreen({ navigation }: any) {
           )}
         </View>
 
+        {/* Портфолио */}
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>Портфолио</Text>
+          <Text style={s.hint}>Фото ваших работ — до 10 штук</Text>
+          <View style={s.portfolioGrid}>
+            {portfolio.map(photo => (
+              <TouchableOpacity key={photo.id} onLongPress={() => removePhoto(photo.id)} activeOpacity={0.85}>
+                <Image source={{ uri: photo.url }} style={s.portfolioThumb} />
+                <TouchableOpacity style={s.deletePhotoBtn} onPress={() => removePhoto(photo.id)}>
+                  <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700', lineHeight: 16 }}>✕</Text>
+                </TouchableOpacity>
+              </TouchableOpacity>
+            ))}
+            {portfolio.length < 10 && (
+              <TouchableOpacity style={s.addPhotoBtn} onPress={pickPhoto} disabled={uploadingPhoto}>
+                {uploadingPhoto
+                  ? <ActivityIndicator color={colors.emerald} />
+                  : <Text style={{ fontSize: 28, color: colors.emerald }}>+</Text>
+                }
+              </TouchableOpacity>
+            )}
+          </View>
+          {portfolio.length > 0 && (
+            <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 8 }}>
+              Удерживайте фото для удаления
+            </Text>
+          )}
+        </View>
+
         <TouchableOpacity style={s.btn} onPress={save} disabled={saving}>
           {saving
             ? <ActivityIndicator color="#fff" />
@@ -170,6 +251,10 @@ const s = StyleSheet.create({
   chipText:      { fontSize: 13, color: colors.textSecondary },
   chipTextActive:{ color: colors.emerald, fontWeight: '700' },
   selectedCount: { fontSize: 12, color: colors.emerald, marginTop: 10, fontWeight: '600' },
-  btn:           { margin: 16, marginTop: 20, backgroundColor: colors.emerald, borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
-  btnText:       { color: '#fff', fontWeight: '800', fontSize: 16 },
+  btn:             { margin: 16, marginTop: 20, backgroundColor: colors.emerald, borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
+  btnText:         { color: '#fff', fontWeight: '800', fontSize: 16 },
+  portfolioGrid:   { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
+  portfolioThumb:  { width: 80, height: 80, borderRadius: 10 },
+  deletePhotoBtn:  { position: 'absolute', top: 4, right: 4, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 10, width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  addPhotoBtn:     { width: 80, height: 80, borderRadius: 10, borderWidth: 2, borderColor: colors.emerald, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.emeraldDim },
 });

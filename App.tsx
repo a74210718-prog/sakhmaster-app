@@ -25,6 +25,9 @@ import ReviewScreen            from './src/screens/main/ReviewScreen';
 import EditProfileScreen       from './src/screens/main/EditProfileScreen';
 import MasterProfileEditScreen from './src/screens/main/MasterProfileEditScreen';
 import MasterStatsScreen       from './src/screens/main/MasterStatsScreen';
+import FleaScreen              from './src/screens/main/FleaScreen';
+import FleaItemScreen          from './src/screens/main/FleaItemScreen';
+import FleaCreateScreen        from './src/screens/main/FleaCreateScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
@@ -82,6 +85,14 @@ function MainTabs() {
         }}
       />
       <Tab.Screen
+        name="Flea"
+        component={FleaScreen}
+        options={{
+          title: 'Барахолка',
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🏷️" focused={focused} />,
+        }}
+      />
+      <Tab.Screen
         name="Notifications"
         component={NotificationsScreen}
         options={{
@@ -134,6 +145,8 @@ function MainStack() {
       <Stack.Screen name="EditProfile"       component={EditProfileScreen} />
       <Stack.Screen name="MasterProfileEdit" component={MasterProfileEditScreen} />
       <Stack.Screen name="MasterStats"       component={MasterStatsScreen} />
+      <Stack.Screen name="FleaItem"          component={FleaItemScreen} />
+      <Stack.Screen name="FleaCreate"        component={FleaCreateScreen} />
     </Stack.Navigator>
   );
 }
