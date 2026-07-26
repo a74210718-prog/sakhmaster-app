@@ -59,6 +59,7 @@ export function getNavigationTarget(data: Record<string, any>): { screen: string
     switch (screen) {
       case 'OrderDetail':    return { screen: 'OrderDetail',    params: { id } };
       case 'ContractDetail': return { screen: 'ContractDetail', params: { id } };
+      case 'Chat':           return { screen: 'Chat', params: { orderId: id, orderTitle: data.orderTitle } };
       case 'MyRentals':      return { screen: 'MyRentals' };
       case 'FleaDeals':      return { screen: 'FleaDeals' };
       case 'ShopOrders':     return { screen: 'ShopOrders' };
