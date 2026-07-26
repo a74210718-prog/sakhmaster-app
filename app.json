@@ -51,6 +51,15 @@
       "expo-secure-store",
       "expo-web-browser",
       [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#10b981",
+          "sounds": [],
+          "mode": "production"
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "Нужен доступ к вашим фото для загрузки изображений",

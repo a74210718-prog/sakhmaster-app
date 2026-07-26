@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View, Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import * as Notifications from 'expo-notifications';
+import { setupNotificationHandler, registerPushToken, getNavigationTarget } from './src/utils/pushNotifications';
 
 import { useAuthStore } from './src/store/authStore';
 import { useCartStore } from './src/store/cartStore';
@@ -241,11 +243,29 @@ function MainStack() {
   );
 }
 
+setupNotificationHandler();
+
 export default function App() {
   const { user, loading, restore } = useAuthStore();
   const restoreCart = useCartStore((s) => s.restore);
+  const navRef = useRef<any>(null);
 
   useEffect(() => { restore(); restoreCart(); }, []);
+
+  useEffect(() => {
+    if (user) registerPushToken().catch(() => {});
+  }, [user?.id]);
+
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data as Record<string, any>;
+      const nav = getNavigationTarget(data);
+      if (nav && navRef.current) {
+        navRef.current.navigate(nav.screen, nav.params);
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   if (loading) {
     return (
@@ -260,7 +280,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer theme={NAV_THEME}>
+      <NavigationContainer theme={NAV_THEME} ref={navRef}>
         <StatusBar style="light" />
         {user ? <MainStack /> : <AuthStack />}
       </NavigationContainer>
